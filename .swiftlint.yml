@@ -1,0 +1,18 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - identifier_name
+  - type_name
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+
+excluded:
+  - Package.swift
+  - Tests/
+
+analyzer_rules:
+  - unused_import
+  - unused_private_declaration
+
