@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 181A97752F17EB0100053FDC /* TGReduxKit */; };
 		182584882F17E6350088449D /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 182584872F17E6350088449D /* TGReduxKit */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
+				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 			name = TGReduxKitDemo;
 			packageProductDependencies = (
 				182584872F17E6350088449D /* TGReduxKit */,
+				181A97752F17EB0100053FDC /* TGReduxKit */,
 			);
 			productName = TGReduxKitDemo;
 			productReference = 182584292F17E3260088449D /* TGReduxKitDemo.app */;
@@ -202,7 +205,7 @@
 			mainGroup = 182584202F17E3260088449D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				182584862F17E6350088449D /* XCLocalSwiftPackageReference "../.." */,
+				181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1825842A2F17E3260088449D /* Products */;
@@ -589,13 +592,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		182584862F17E6350088449D /* XCLocalSwiftPackageReference "../TGReduxKit" */ = {
+		181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../TGReduxKit;
+			relativePath = ../../../TGReduxKit;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		181A97752F17EB0100053FDC /* TGReduxKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TGReduxKit;
+		};
 		182584872F17E6350088449D /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGReduxKit;
