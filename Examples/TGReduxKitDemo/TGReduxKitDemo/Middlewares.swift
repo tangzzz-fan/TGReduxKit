@@ -26,11 +26,49 @@ public struct LiveProductSearchService: ProductSearchServicing {
     }
 }
 
+public protocol FeatureFlagServicing: Sendable {
+    func fetchSnapshot() async -> FeatureFlagSnapshot
+}
+
+public actor DemoFeatureFlagService: FeatureFlagServicing {
+    private var nextVariantIndex = 0
+
+    public init() {}
+
+    public func fetchSnapshot() async -> FeatureFlagSnapshot {
+        let variants = [
+            FeatureFlagSnapshot(
+                isExpressCheckoutEnabled: false,
+                showsFreeShippingBanner: true,
+                showsRecommendedBadge: true,
+                hidesBudgetProducts: false
+            ),
+            FeatureFlagSnapshot(
+                isExpressCheckoutEnabled: true,
+                showsFreeShippingBanner: false,
+                showsRecommendedBadge: true,
+                hidesBudgetProducts: true
+            )
+        ]
+
+        let snapshot = variants[nextVariantIndex % variants.count]
+        nextVariantIndex += 1
+
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        return snapshot
+    }
+}
+
 public struct ShoppingDependencies: Sendable {
     public var productSearchService: any ProductSearchServicing
+    public var featureFlagService: any FeatureFlagServicing
 
-    public init(productSearchService: any ProductSearchServicing = LiveProductSearchService()) {
+    public init(
+        productSearchService: any ProductSearchServicing = LiveProductSearchService(),
+        featureFlagService: any FeatureFlagServicing = DemoFeatureFlagService()
+    ) {
         self.productSearchService = productSearchService
+        self.featureFlagService = featureFlagService
     }
 }
 
@@ -59,6 +97,21 @@ public func makeProductSearchMiddleware(
 
             guard !Task.isCancelled else { return }
             await store.dispatch(.catalog(.searchCompleted(query, results)))
+        }
+    }
+}
+
+public func makeFeatureFlagMiddleware(
+    dependencies: ShoppingDependencies
+) -> Middleware<ShoppingState, ShoppingAction> {
+    { store, action, next in
+        next(action)
+
+        guard case .featureFlags(.loadRequested) = action else { return }
+
+        store.runTask(id: "feature-flags") {
+            let snapshot = await dependencies.featureFlagService.fetchSnapshot()
+            await store.dispatch(.featureFlags(.loaded(snapshot, Date())))
         }
     }
 }

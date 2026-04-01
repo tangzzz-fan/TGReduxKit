@@ -302,7 +302,8 @@ func makeFeatureFlagMiddleware(
 
 - Feature Flag 库负责远端拉取、缓存和分流规则。
 - TGReduxKit 负责把 flag 结果转换成可追踪的状态与 action。
-- View 只读取 `store.state.flags` 或 feature scope，不直接调用 flag SDK。
+- 配置看板类 View 可以读取 `FeatureFlagsState`，业务 View 更推荐读取 reducer 映射后的派生展示状态。
+- Demo 中的完整落地方案见 `TGREDUXKIT_FEATUREFLAG_DEMO_GUIDE.md`。
 
 常见结合方式：
 

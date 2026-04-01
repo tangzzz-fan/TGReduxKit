@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-04-02
+
+### Added
+- **Documentation**
+  - Added a standalone Feature Flag integration article covering architecture boundaries, module design, and a maintenance-oriented rollout plan.
+- **Demo**
+  - Added a comprehensive Feature Flag example to `TGReduxKitDemo` with startup loading, manual refresh, scoped state consumption, and UI branching.
+- **Tests**
+  - Added demo tests covering catalog visibility derivation under search and Feature Flag combinations.
+
 ## [1.0.0] - 2026-04-02
 
 ### Changed
@@ -42,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated the public guide to match the actual reducer and middleware model.
   - Added scoped store, cancellation, and debug middleware examples.
   - Added a dependency injection integration example that keeps DI containers outside the store boundary.
-  - Added a feature flag integration example that maps remote flag values into explicit state and actions.
 - **ARCHITECTURE**
   - Rewrote the architecture description around `@MainActor Store`, `ScopedStore`, and lightweight cancellation.
 

@@ -10,6 +10,8 @@ struct ProductListView: View {
     var body: some View {
         List {
             Section {
+                FeatureFlagStatusCard()
+
                 TextField(
                     "Search products",
                     text: catalogStore.binding(
@@ -27,26 +29,32 @@ struct ProductListView: View {
                 }
             }
 
-            Section {
+            if catalogStore.state.showsFreeShippingBanner {
+                Section {
+                    ProductBannerView(
+                        title: "Free Shipping Active",
+                        subtitle: "This banner is driven by catalog presentation state updated from remote flags."
+                    )
+                }
+            }
+
+            Section("Products") {
+                if catalogStore.state.visibleProducts.isEmpty {
+                    ContentUnavailableView(
+                        "No Products",
+                        systemImage: "shippingbox",
+                        description: Text("Adjust search or refresh feature flags.")
+                    )
+                }
+
                 ForEach(catalogStore.state.visibleProducts) { product in
                     Button {
                         store.dispatch(.navigation(.push(.detail(product.id))))
                     } label: {
-                        HStack {
-                            Image(systemName: product.imageName)
-                                .font(.title)
-                                .frame(width: 50)
-                            VStack(alignment: .leading) {
-                                Text(product.name)
-                                    .font(.headline)
-                                Text("$\(product.price)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.gray)
-                        }
+                        ProductRowView(
+                            product: product,
+                            showsRecommendedBadge: catalogStore.state.showsRecommendedBadge
+                        )
                     }
                     .foregroundStyle(.primary)
                 }
@@ -97,21 +105,30 @@ struct ProductDetailView: View {
                 
                 Text(product.description)
                     .padding()
-                
+
+                if store.state.catalog.showsFreeShippingBanner {
+                    ProductBannerView(
+                        title: "Free Shipping Eligible",
+                        subtitle: "The detail screen uses derived shopping state instead of reading the flag snapshot directly."
+                    )
+                    .padding(.horizontal)
+                }
+
                 Spacer()
 
-                Button {
-                    store.dispatch(.cart(.add(product)))
-                } label: {
-                    Text("Add to Cart")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                if store.state.isExpressCheckoutAvailable {
+                    PrimaryActionButton(title: "Express Checkout") {
+                        store.dispatch(.cart(.add(product)))
+                        store.dispatch(.navigation(.push(.cart)))
+                    }
+                    .padding(.horizontal)
                 }
-                .padding()
+
+                PrimaryActionButton(title: "Add to Cart") {
+                    store.dispatch(.cart(.add(product)))
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
             }
             .navigationTitle(product.name)
             .toolbar {
@@ -164,5 +181,150 @@ struct CartView: View {
             }
         }
         .navigationTitle("Cart")
+    }
+}
+
+struct FeatureFlagStatusCard: View {
+    @Environment(ScopedStore<FeatureFlagsState, FeatureFlagsAction>.self) private var store
+
+    private var enabledFlags: [String] {
+        let snapshot = store.state.snapshot
+        return [
+            snapshot.isExpressCheckoutEnabled ? "Express Checkout" : nil,
+            snapshot.showsFreeShippingBanner ? "Free Shipping Banner" : nil,
+            snapshot.showsRecommendedBadge ? "Recommended Badge" : nil,
+            snapshot.hidesBudgetProducts ? "Premium Catalog" : nil
+        ].compactMap { $0 }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Remote Feature Flags")
+                        .font(.headline)
+                    Text(store.state.lastSource?.rawValue ?? "Waiting for first load")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button("Refresh") {
+                    store.dispatch(.loadRequested(.manualRefresh))
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(store.state.isLoading)
+            }
+
+            if store.state.isLoading {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Fetching remote configuration...")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            } else if let lastUpdated = store.state.lastUpdated {
+                Text("Last updated at \(lastUpdated.formatted(date: .omitted, time: .standard))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if enabledFlags.isEmpty {
+                        FeatureFlagChip(title: "All Optional Flags Disabled")
+                    } else {
+                        ForEach(enabledFlags, id: \.self) { flag in
+                            FeatureFlagChip(title: flag)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct FeatureFlagChip: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.caption)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.blue.opacity(0.12))
+            .foregroundStyle(.blue)
+            .clipShape(Capsule())
+    }
+}
+
+struct ProductBannerView: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.headline)
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct ProductRowView: View {
+    let product: Product
+    let showsRecommendedBadge: Bool
+
+    var body: some View {
+        HStack {
+            Image(systemName: product.imageName)
+                .font(.title)
+                .frame(width: 50)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(product.name)
+                        .font(.headline)
+
+                    if showsRecommendedBadge {
+                        FeatureFlagChip(title: "Recommended")
+                    }
+                }
+
+                Text("$\(product.price)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.gray)
+        }
+    }
+}
+
+struct PrimaryActionButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
     }
 }

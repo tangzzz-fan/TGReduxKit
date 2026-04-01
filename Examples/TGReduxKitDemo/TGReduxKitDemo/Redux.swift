@@ -7,6 +7,8 @@ import SwiftUI
 public struct ShoppingState: Equatable {
     public var catalog: CatalogState
     public var cart: CartState = .init()
+    public var featureFlags: FeatureFlagsState = .init()
+    public var isExpressCheckoutAvailable = false
     public var navigation: NavigationState<ShoppingRoute> = .init(path: [])
 
     public func product(for id: UUID) -> Product? {
@@ -20,7 +22,16 @@ public struct ShoppingState: Equatable {
             Product(name: "AirPods Pro", price: 249, description: "Noise Cancelling", imageName: "airpods"),
             Product(name: "Apple Watch", price: 399, description: "Smart Watch", imageName: "applewatch")
         ]
-        self.catalog = CatalogState(allProducts: products, visibleProducts: products)
+        let snapshot = FeatureFlagSnapshot.default
+        self.featureFlags = FeatureFlagsState(snapshot: snapshot)
+        self.catalog = CatalogState(
+            allProducts: products,
+            visibleProducts: visibleProducts(from: products, matching: "", flags: snapshot),
+            showsFreeShippingBanner: snapshot.showsFreeShippingBanner,
+            showsRecommendedBadge: snapshot.showsRecommendedBadge,
+            isPremiumCatalogOnly: snapshot.hidesBudgetProducts
+        )
+        self.isExpressCheckoutAvailable = snapshot.isExpressCheckoutEnabled
     }
 }
 
@@ -29,17 +40,26 @@ public struct CatalogState: Equatable {
     public var visibleProducts: [Product]
     public var searchQuery: String = ""
     public var isSearching: Bool = false
+    public var showsFreeShippingBanner: Bool = false
+    public var showsRecommendedBadge: Bool = false
+    public var isPremiumCatalogOnly: Bool = false
 
     public init(
         allProducts: [Product] = [],
         visibleProducts: [Product] = [],
         searchQuery: String = "",
-        isSearching: Bool = false
+        isSearching: Bool = false,
+        showsFreeShippingBanner: Bool = false,
+        showsRecommendedBadge: Bool = false,
+        isPremiumCatalogOnly: Bool = false
     ) {
         self.allProducts = allProducts
         self.visibleProducts = visibleProducts
         self.searchQuery = searchQuery
         self.isSearching = isSearching
+        self.showsFreeShippingBanner = showsFreeShippingBanner
+        self.showsRecommendedBadge = showsRecommendedBadge
+        self.isPremiumCatalogOnly = isPremiumCatalogOnly
     }
 }
 
@@ -59,11 +79,62 @@ public struct CartState: Equatable {
     }
 }
 
+public struct FeatureFlagsState: Equatable {
+    public var snapshot: FeatureFlagSnapshot
+    public var isLoading: Bool
+    public var lastUpdated: Date?
+    public var lastSource: FeatureFlagLoadSource?
+
+    public init(
+        snapshot: FeatureFlagSnapshot = .default,
+        isLoading: Bool = false,
+        lastUpdated: Date? = nil,
+        lastSource: FeatureFlagLoadSource? = nil
+    ) {
+        self.snapshot = snapshot
+        self.isLoading = isLoading
+        self.lastUpdated = lastUpdated
+        self.lastSource = lastSource
+    }
+}
+
+public struct FeatureFlagSnapshot: Equatable, Sendable {
+    public var isExpressCheckoutEnabled: Bool
+    public var showsFreeShippingBanner: Bool
+    public var showsRecommendedBadge: Bool
+    public var hidesBudgetProducts: Bool
+
+    public init(
+        isExpressCheckoutEnabled: Bool,
+        showsFreeShippingBanner: Bool,
+        showsRecommendedBadge: Bool,
+        hidesBudgetProducts: Bool
+    ) {
+        self.isExpressCheckoutEnabled = isExpressCheckoutEnabled
+        self.showsFreeShippingBanner = showsFreeShippingBanner
+        self.showsRecommendedBadge = showsRecommendedBadge
+        self.hidesBudgetProducts = hidesBudgetProducts
+    }
+
+    public static let `default` = FeatureFlagSnapshot(
+        isExpressCheckoutEnabled: false,
+        showsFreeShippingBanner: true,
+        showsRecommendedBadge: true,
+        hidesBudgetProducts: false
+    )
+}
+
+public enum FeatureFlagLoadSource: String, Equatable, Sendable {
+    case launch = "Launch"
+    case manualRefresh = "Manual Refresh"
+}
+
 // MARK: - Action
 
 public enum ShoppingAction: Equatable {
     case catalog(CatalogAction)
     case cart(CartAction)
+    case featureFlags(FeatureFlagsAction)
     case navigation(NavigationAction<ShoppingRoute>)
     case handleDeepLink(URL)
 }
@@ -78,6 +149,11 @@ public enum CartAction: Equatable {
     case remove(IndexSet)
 }
 
+public enum FeatureFlagsAction: Equatable {
+    case loadRequested(FeatureFlagLoadSource)
+    case loaded(FeatureFlagSnapshot, Date)
+}
+
 // MARK: - Reducer
 
 public let shoppingReducer: Reducer<ShoppingState, ShoppingAction> = { state, action in
@@ -89,13 +165,20 @@ public let shoppingReducer: Reducer<ShoppingState, ShoppingAction> = { state, ac
             state.catalog.isSearching = !query.isEmpty
 
             if query.isEmpty {
-                state.catalog.visibleProducts = state.catalog.allProducts
+                state.catalog.visibleProducts = visibleProducts(
+                    from: state.catalog.allProducts,
+                    matching: query,
+                    flags: state.featureFlags.snapshot
+                )
                 state.catalog.isSearching = false
             }
 
         case .searchCompleted(let query, let products):
             guard query == state.catalog.searchQuery else { return }
-            state.catalog.visibleProducts = products
+            state.catalog.visibleProducts = applyFeatureFlags(
+                to: products,
+                flags: state.featureFlags.snapshot
+            )
             state.catalog.isSearching = false
         }
 
@@ -110,6 +193,27 @@ public let shoppingReducer: Reducer<ShoppingState, ShoppingAction> = { state, ac
 
         case .remove(let offsets):
             state.cart.items.remove(atOffsets: offsets)
+        }
+
+    case .featureFlags(let featureFlagsAction):
+        switch featureFlagsAction {
+        case .loadRequested(let source):
+            state.featureFlags.isLoading = true
+            state.featureFlags.lastSource = source
+
+        case .loaded(let snapshot, let lastUpdated):
+            state.featureFlags.snapshot = snapshot
+            state.featureFlags.isLoading = false
+            state.featureFlags.lastUpdated = lastUpdated
+            state.catalog.showsFreeShippingBanner = snapshot.showsFreeShippingBanner
+            state.catalog.showsRecommendedBadge = snapshot.showsRecommendedBadge
+            state.catalog.isPremiumCatalogOnly = snapshot.hidesBudgetProducts
+            state.isExpressCheckoutAvailable = snapshot.isExpressCheckoutEnabled
+            state.catalog.visibleProducts = visibleProducts(
+                from: state.catalog.allProducts,
+                matching: state.catalog.searchQuery,
+                flags: snapshot
+            )
         }
 
     case .navigation(let navAction):
@@ -129,4 +233,35 @@ public let shoppingReducer: Reducer<ShoppingState, ShoppingAction> = { state, ac
             navigationReducer(state: &state.navigation, action: .push(.detail(id)))
         }
     }
+}
+
+func visibleProducts(
+    from products: [Product],
+    matching query: String,
+    flags: FeatureFlagSnapshot
+) -> [Product] {
+    let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    let searchResults: [Product]
+    if normalizedQuery.isEmpty {
+        searchResults = products
+    } else {
+        searchResults = products.filter { product in
+            product.name.localizedCaseInsensitiveContains(normalizedQuery)
+            || product.description.localizedCaseInsensitiveContains(normalizedQuery)
+        }
+    }
+
+    return applyFeatureFlags(to: searchResults, flags: flags)
+}
+
+func applyFeatureFlags(
+    to products: [Product],
+    flags: FeatureFlagSnapshot
+) -> [Product] {
+    guard flags.hidesBudgetProducts else {
+        return products
+    }
+
+    return products.filter { $0.price >= 500 }
 }
