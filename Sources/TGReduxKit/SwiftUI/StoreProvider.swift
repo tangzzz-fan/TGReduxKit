@@ -35,4 +35,8 @@ extension View {
     public func provideStore<State, Action>(_ store: Store<State, Action>) -> some View {
         self.environment(store)
     }
+
+    public func provideStore<State, Action>(_ store: ScopedStore<State, Action>) -> some View {
+        self.environment(store)
+    }
 }

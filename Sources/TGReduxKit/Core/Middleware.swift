@@ -1,7 +1,7 @@
 import Foundation
 
 /// A function used to dispatch an action.
-public typealias Dispatch<Action> = (Action) -> Void
+public typealias Dispatch<Action> = @MainActor (Action) -> Void
 
 /// A function that intercepts actions before they reach the reducer.
 ///
@@ -38,4 +38,4 @@ public typealias Dispatch<Action> = (Action) -> Void
 ///     }
 /// }
 /// ```
-public typealias Middleware<State, Action> = (Store<State, Action>, Action, @escaping Dispatch<Action>) -> Void
+public typealias Middleware<State, Action> = @MainActor (Store<State, Action>, Action, @escaping Dispatch<Action>) -> Void

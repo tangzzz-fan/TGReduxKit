@@ -5,29 +5,52 @@ import TGReduxKit
 
 struct ProductListView: View {
     @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
-    
+    @Environment(ScopedStore<CatalogState, CatalogAction>.self) private var catalogStore
+
     var body: some View {
-        List(store.state.products) { product in
-            Button {
-                store.dispatch(.navigation(.push(.detail(product.id))))
-            } label: {
-                HStack {
-                    Image(systemName: product.imageName)
-                        .font(.title)
-                        .frame(width: 50)
-                    VStack(alignment: .leading) {
-                        Text(product.name)
-                            .font(.headline)
-                        Text("$\(product.price)")
-                            .font(.subheadline)
+        List {
+            Section {
+                TextField(
+                    "Search products",
+                    text: catalogStore.binding(
+                        get: \.searchQuery,
+                        send: CatalogAction.searchQueryChanged
+                    )
+                )
+
+                if catalogStore.state.isSearching {
+                    HStack {
+                        ProgressView()
+                        Text("Searching...")
                             .foregroundStyle(.secondary)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .foregroundStyle(.gray)
                 }
             }
-            .foregroundStyle(.primary)
+
+            Section {
+                ForEach(catalogStore.state.visibleProducts) { product in
+                    Button {
+                        store.dispatch(.navigation(.push(.detail(product.id))))
+                    } label: {
+                        HStack {
+                            Image(systemName: product.imageName)
+                                .font(.title)
+                                .frame(width: 50)
+                            VStack(alignment: .leading) {
+                                Text(product.name)
+                                    .font(.headline)
+                                Text("$\(product.price)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.gray)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                }
+            }
         }
         .navigationTitle("Products")
         .toolbar {
@@ -37,7 +60,7 @@ struct ProductListView: View {
                 } label: {
                     HStack {
                         Image(systemName: "cart")
-                        Text("\(store.state.cartItems.reduce(0) { $0 + $1.quantity })")
+                        Text("\(store.state.cart.totalQuantity)")
                     }
                 }
             }
@@ -50,11 +73,11 @@ struct ProductListView: View {
 struct ProductDetailView: View {
     let productID: UUID
     @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
-    
+
     var product: Product? {
         store.state.product(for: productID)
     }
-    
+
     var body: some View {
         if let product = product {
             VStack(spacing: 20) {
@@ -76,9 +99,9 @@ struct ProductDetailView: View {
                     .padding()
                 
                 Spacer()
-                
+
                 Button {
-                    store.dispatch(.addToCart(product))
+                    store.dispatch(.cart(.add(product)))
                 } label: {
                     Text("Add to Cart")
                         .font(.headline)
@@ -98,7 +121,7 @@ struct ProductDetailView: View {
                     } label: {
                         HStack {
                             Image(systemName: "cart")
-                            Text("\(store.state.cartItems.reduce(0) { $0 + $1.quantity })")
+                            Text("\(store.state.cart.totalQuantity)")
                         }
                     }
                 }
@@ -112,11 +135,11 @@ struct ProductDetailView: View {
 // MARK: - Cart View
 
 struct CartView: View {
-    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
-    
+    @Environment(ScopedStore<CartState, CartAction>.self) private var store
+
     var body: some View {
         List {
-            ForEach(store.state.cartItems) { item in
+            ForEach(store.state.items) { item in
                 HStack {
                     Text(item.product.name)
                     Spacer()
@@ -125,17 +148,16 @@ struct CartView: View {
                 }
             }
             .onDelete { indexSet in
-                store.dispatch(.removeFromCart(indexSet))
+                store.dispatch(.remove(indexSet))
             }
-            
-            if !store.state.cartItems.isEmpty {
+
+            if !store.state.items.isEmpty {
                 Section {
                     HStack {
                         Text("Total")
                             .bold()
                         Spacer()
-                        let total = store.state.cartItems.reduce(0) { $0 + $1.product.price * Decimal($1.quantity) }
-                        Text("$\(total)")
+                        Text("$\(store.state.totalPrice)")
                             .bold()
                     }
                 }

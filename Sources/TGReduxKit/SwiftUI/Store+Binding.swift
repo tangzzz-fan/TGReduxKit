@@ -22,3 +22,15 @@ extension Store {
         )
     }
 }
+
+extension ScopedStore {
+    public func binding<Value>(
+        get: @escaping @Sendable (State) -> Value,
+        send: @escaping @Sendable (Value) -> Action
+    ) -> Binding<Value> {
+        Binding(
+            get: { get(self.state) },
+            set: { newValue in self.dispatch(send(newValue)) }
+        )
+    }
+}

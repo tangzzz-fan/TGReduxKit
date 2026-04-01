@@ -31,13 +31,13 @@ Categories:
 ### Release Workflow (Maintainers)
 
 1.  **Update Changelog**:
-    - Move content from `[Unreleased]` to a new version section (e.g., `## [0.0.2] - YYYY-MM-DD`).
+    - Move content from `[Unreleased]` to a new version section (e.g., `## [1.0.1] - YYYY-MM-DD`).
     - Update the comparison links at the bottom of the file (if applicable).
 2.  **Bump Version**:
     - No `Info.plist` in SPM packages, but ensure Git tag matches.
 3.  **Commit**: Commit the changelog changes.
 4.  **Tag**: Create a git tag for the release.
     ```bash
-    git tag 0.0.2
-    git push origin 0.0.2
+    git tag 1.0.0
+    git push origin 1.0.0
     ```

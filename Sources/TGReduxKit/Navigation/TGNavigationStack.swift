@@ -5,11 +5,10 @@ import SwiftUI
 /// This view manages the synchronization between the `NavigationState` in your Store
 /// and the SwiftUI navigation system.
 public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: View {
-    
     @Binding private var state: NavigationState<Route>
     private let root: () -> Root
     private let destination: (Route) -> Destination
-    
+
     /// Initializes the navigation stack with a binding to the navigation state.
     ///
     /// - Parameters:
@@ -25,7 +24,7 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
         self.root = root
         self.destination = destination
     }
-    
+
     public var body: some View {
         NavigationStack(path: $state.path) {
             root()
@@ -36,10 +35,12 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
         .sheet(
             item: Binding(
                 get: { state.presentationStyle == .sheet ? state.presentedRoute : nil },
-                set: { if $0 == nil { 
-                    state.presentedRoute = nil
-                    state.presentationStyle = nil
-                } }
+                set: {
+                    if $0 == nil {
+                        state.presentedRoute = nil
+                        state.presentationStyle = nil
+                    }
+                }
             )
         ) { route in
             destination(route)
@@ -47,14 +48,15 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
         .fullScreenCover(
             item: Binding(
                 get: { state.presentationStyle == .fullScreenCover ? state.presentedRoute : nil },
-                set: { if $0 == nil { 
-                    state.presentedRoute = nil
-                    state.presentationStyle = nil
-                } }
+                set: {
+                    if $0 == nil {
+                        state.presentedRoute = nil
+                        state.presentationStyle = nil
+                    }
+                }
             )
         ) { route in
             destination(route)
         }
     }
 }
-

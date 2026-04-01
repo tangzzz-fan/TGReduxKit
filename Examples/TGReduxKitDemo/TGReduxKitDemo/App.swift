@@ -7,30 +7,45 @@ import TGReduxKit
 /// Note: Since this is inside a package, you would typically wrap this in a struct that conforms to `App`
 /// or use it as a root view in your application.
 public struct ShoppingAppView: View {
-    @State private var store = Store(
-        initialState: ShoppingState(),
-        reducer: shoppingReducer,
-        middlewares: [loggingMiddleware, analyticsMiddleware]
-    )
-    
-    public init() {}
-    
+    @State private var store: Store<ShoppingState, ShoppingAction>
+    @State private var catalogStore: ScopedStore<CatalogState, CatalogAction>
+    @State private var cartStore: ScopedStore<CartState, CartAction>
+
+    public init(dependencies: ShoppingDependencies = .init()) {
+        let store = Store(
+            initialState: ShoppingState(),
+            reducer: shoppingReducer,
+            middlewares: [
+                loggingMiddleware,
+                analyticsMiddleware,
+                makeProductSearchMiddleware(dependencies: dependencies)
+            ]
+        )
+
+        _store = State(initialValue: store)
+        _catalogStore = State(initialValue: store.scope(state: \.catalog, action: ShoppingAction.catalog))
+        _cartStore = State(initialValue: store.scope(state: \.cart, action: ShoppingAction.cart))
+    }
+
     public var body: some View {
         TGNavigationStack(
             state: Binding(
                 get: { store.state.navigation },
-                set: { _ in } // Navigation is one-way driven by state in this example, but binding allows two-way sync if needed
+                set: { _ in }
             )
         ) {
             ProductListView()
+                .provideStore(catalogStore)
         } destination: { route in
             switch route {
             case .list:
                 ProductListView()
+                    .provideStore(catalogStore)
             case .detail(let id):
                 ProductDetailView(productID: id)
             case .cart:
                 CartView()
+                    .provideStore(cartStore)
             }
         }
         .onOpenURL { url in
