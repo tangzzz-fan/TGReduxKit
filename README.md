@@ -357,6 +357,34 @@ let store = Store(
 )
 ```
 
+### 7.1 时间旅行调试（v2.0）
+
+挂载 `timeTravelMiddleware` 录制每个 Action 前后的 State 快照：
+
+```swift
+let recorder = TimeTravelRecorder<AppState, AppAction>()
+let store = Store(
+    initialState: AppState(),
+    reducer: appReducer,
+    middlewares: [timeTravelMiddleware(recorder: recorder)]
+)
+
+store.dispatch(.increment)
+store.dispatch(.decrement)
+
+// 回溯时间线
+for entry in recorder.entries {
+    print("#\(entry.index): \(entry.action) → \(entry.stateAfter)")
+}
+
+// 跳转到任意快照
+let earlier = recorder.snapshot(at: 1)
+```
+
+`TimelineInspector` 提供 SwiftUI debug 视图，嵌入 App 的 `#if DEBUG` 菜单即可浏览完整时间线。
+
+> 完整使用指南（购物 App + 车载 App 场景）见 [时间旅行调试指南](Docs/TIME_TRAVEL_GUIDE.md)。
+
 ### 8. 与依赖注入容器协作
 
 TGReduxKit 不需要内建 DI 容器。更合适的方式是让 Factory、Swinject、Resolver 一类容器在框架外解析依赖，再把依赖传入 middleware 工厂。
