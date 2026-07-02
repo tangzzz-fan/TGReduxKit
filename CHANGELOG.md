@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-07-03
+
+### Changed
+- **Demo / Redux.swift**: `shoppingReducer` 从手写 switch 重构为 `combineReducers + pullback` 组合式写法。
+  - 新增三个独立的 Feature reducer（`catalogReducer` / `cartReducer` / `featureFlagsReducer`）。
+  - 新增 `crossCuttingReducer` 集中处理子 Reducer 无法覆盖的根级逻辑（Flag→展示字段映射、多子 State 联动、路由/Deep Link）。
+  - 新增详细的中文注释解释 `pullback` 的使用场景及其边界。
+
+### Added
+- **Documentation / README**: 新增「为什么需要 pullback」章节。
+  - 引用 Demo 场景说明子 Reducer 何时需要父级介入。
+  - 解释 `pullback` 与 `crossCuttingReducer` 的角色分工。
+
 ## [1.4.0] - 2026-07-03
 
 ### Added
