@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-03
+
+### Added
+- **Debug / Time Travel**: 新增 `TimeTravelRecorder` + `timeTravelMiddleware`。
+  - 以 middleware 形式录制 action 时间线和 state 快照（before/after）。
+  - 支持 `isRecording` 开关、`maxEntries` 上限、`snapshot(at:)` 跳转、`filter(where:)` 筛选。
+  - JSON 导出（State/Action 遵循 Codable 时）。
+  - 生产环境 zero-cost——不挂载 middleware 不产生任何开销。
+- **Debug / TimelineInspector**: 新增 SwiftUI debug View。
+  - 显示 action 列表（index + timestamp）。
+  - 点击任一 entry 查看 before/after State 详情。
+  - 内建 Pause / Resume / Clear 控件。
+- **Tests**: 新增 `TimeTravelTests`（9 个测试用例），覆盖录制、跳转、筛选、暂停、上限裁剪、清空、JSON 导出、跨 Feature 时间线。
+- **Docs**: 新增 `Docs/TIME_TRAVEL_GUIDE.md`，覆盖购物 App 和车载 App 两个场景的时间旅行调试用法。
+
 ## [1.4.1] - 2026-07-03
 
 ### Changed
