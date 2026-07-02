@@ -138,14 +138,4 @@ struct ContentView: View {
 
 ## 文档生成
 
-本项目包含完整的 API 文档注释。你可以使用 Swift-DocC 生成文档。
-
-### 在 Xcode 中查看
-在 Xcode 中打开 Package，选择 `Product` -> `Build Documentation`。
-
-### 命令行生成
-```bash
-swift package generate-documentation --target TGReduxKit
-```
-
-生成的文档通常位于 `.build/plugins/Swift-DocC/outputs` 目录下（具体取决于 Swift 版本和平台）。
+在 Xcode 中打开 Package，选择 `Product` -> `Build Documentation` 即可生成 DocC 文档。
