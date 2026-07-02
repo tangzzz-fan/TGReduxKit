@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-07-03
+
+### Added
+- **Tests**: 新增 `CrossFeatureTests`（5 个测试用例），覆盖 README 中三种跨 Feature 通信模式：
+  - 模式一：父级 Middleware 转发（cart add → recommendations refresh）
+  - 模式二：Reducer 内联联动（catalog/cart update → recommendations 同步更新）
+  - 模式三：显式协调 Action（跨 Feature 边界编译期约束）
+  - 三种模式共存验证
+
 ## [1.3.0] - 2026-07-03
 
 ### Added

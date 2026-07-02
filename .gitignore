@@ -6,3 +6,4 @@ DerivedData/
 .swiftpm/configuration/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+TGREDUXKIT_ASYNC_FLOW_ANALYSIS.md
