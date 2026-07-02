@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-03
+
+### Added
+- **Testing / TestStore**: 新增 `TestStore<State, Action>` 用于 reducer 的同步测试。
+  - `send(_:)` 同步派发 action，记录 state 历史。
+  - `send(_:expect:)` 派发 action 并断言期望状态。
+  - `assert(equals:)` 断言当前状态与期望值一致。
+  - `assert(_:_:)` 基于 predicate 的自定义断言。
+  - `reset(to:)` 重置 TestStore 到新初始状态。
+  - `replayHistory()` 回放完整的状态变更历史。
+- **Core / Async Primitives**: 新增声明式异步原语，全部基于现有 `runTask(id:)` 机制。
+  - `debounce(id:milliseconds:operation:)` 防抖执行，同 ID 自动取消旧任务。
+  - `throttle(id:milliseconds:operation:)` 节流执行，确保在间隔内只执行一次。
+  - `runTask(id:maxRetries:backoff:operation:)` 带重试的异步任务，支持 `.constant` 和 `.exponential` 两种退避策略。
+  - `runTask(id:timeoutMs:fallback:operation:)` 带超时的异步任务，超时后自动 dispatch fallback action。
+  - `BackoffStrategy` 枚举，支持 constant 和 exponential（可设置 maxMs 上限）。
+- **Tests**: 新增 `TestStoreTests`（14 个测试用例）和 `AsyncPrimitivesTests`（12 个测试用例）。
+
+### Fixed
+- 修复 `TGNavigationStack` 在 macOS 上无法编译的问题（`fullScreenCover` 仅限 iOS/tvOS）。
+
 ## [1.1.0] - 2026-04-02
 
 ### Added

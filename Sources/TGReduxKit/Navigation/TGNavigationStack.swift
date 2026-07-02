@@ -45,6 +45,7 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
         ) { route in
             destination(route)
         }
+        #if os(iOS) || os(tvOS)
         .fullScreenCover(
             item: Binding(
                 get: { state.presentationStyle == .fullScreenCover ? state.presentedRoute : nil },
@@ -58,5 +59,6 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
         ) { route in
             destination(route)
         }
+        #endif
     }
 }

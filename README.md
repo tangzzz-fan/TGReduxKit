@@ -167,7 +167,48 @@ let apiMiddleware: Middleware<AppState, AppAction> = { store, action, next in
 }
 ```
 
-### 3. 取消同类旧任务
+### 3. 声明式异步原语
+
+TGReduxKit 提供了防抖、节流、重试、超时等声明式原语：
+
+**Debounce（防抖）** — 适合搜索框输入：
+
+```swift
+store.debounce(id: "search", milliseconds: 300) {
+    let results = await searchService.search(query)
+    guard !Task.isCancelled else { return }
+    await store.dispatch(.searchCompleted(results))
+}
+```
+
+**Throttle（节流）** — 适合滚动追踪、快速点击：
+
+```swift
+store.throttle(id: "scroll-track", milliseconds: 200) {
+    await store.dispatch(.trackPosition(position))
+}
+```
+
+**Retry（重试）** — 自动重试失败的请求：
+
+```swift
+store.runTask(id: "sync", maxRetries: 3, backoff: .exponential(baseMs: 200)) {
+    let data = try await api.fetchData()
+    await store.dispatch(.dataLoaded(data))
+}
+```
+
+**Timeout（超时）** — 超时后自动 fallback：
+
+```swift
+store.runTask(id: "fetch", timeoutMs: 5_000, fallback: { .fetchFailed(.timeout) }) {
+    let data = await api.fetchData()
+    guard !Task.isCancelled else { return }
+    await store.dispatch(.dataLoaded(data))
+}
+```
+
+### 4. 取消同类旧任务
 
 ```swift
 store.runTask(id: "search") {
@@ -179,7 +220,38 @@ store.runTask(id: "search") {
 store.cancelTask(id: "search")
 ```
 
-### 4. 模块化 Reducer
+### 5. 使用 TestStore 测试 Reducer
+
+`TestStore` 是纯 reducer 的同步测试工具，不需要运行 App 或等待异步操作：
+
+```swift
+import Testing
+@testable import TGReduxKit
+
+@Test func counterFlow() {
+    let store = TestStore(initialState: CounterState(), reducer: counterReducer)
+
+    // send + expect 合并断言
+    store.send(.increment, expect: CounterState(count: 1))
+
+    // 逐步 send + assert
+    store.send(.increment)
+    store.send(.decrement)
+    store.assert(equals: CounterState(count: 1))
+
+    // 自定义 predicate 断言
+    store.send(.setMessage("Done"))
+    store.assert("state should match") { state in
+        state.count == 1 && state.message == "Done"
+    }
+
+    // 检查完整状态历史
+    let history = store.replayHistory()
+    #expect(history.count == 4) // 初始状态 + 3 次 send
+}
+```
+
+### 6. 模块化 Reducer
 
 随着应用变大，可以将 Reducer 拆分管理。
 
@@ -195,7 +267,7 @@ let appReducer: Reducer<AppState, AppAction> = { state, action in
 }
 ```
 
-### 5. 调试中间件
+### 7. 调试中间件
 
 ```swift
 let store = Store(
@@ -208,7 +280,7 @@ let store = Store(
 )
 ```
 
-### 6. 与依赖注入容器协作
+### 8. 与依赖注入容器协作
 
 TGReduxKit 不需要内建 DI 容器。更合适的方式是让 Factory、Swinject、Resolver 一类容器在框架外解析依赖，再把依赖传入 middleware 工厂。
 
@@ -258,7 +330,7 @@ let store = Store(
 - DI 容器负责解析 service、repository、client。
 - View 和 reducer 不直接依赖具体容器实现。
 
-### 7. 与 Feature Flag 库协作
+### 9. 与 Feature Flag 库协作
 
 Feature Flag 更适合作为依赖源，而不是 Store 内建能力。推荐做法是由 Feature Flag SDK 或封装服务提供 flag 快照，再通过 middleware 或应用启动流程把结果转换成普通 action。
 
@@ -321,6 +393,106 @@ func makeFeatureFlagMiddleware(
 5. **异步控制**: 同类任务优先使用 `CancellationID` 管理取消。
 6. **依赖注入边界**: 不把 DI 容器塞进 Store，优先注入协议化依赖或 middleware builder 参数。
 7. **Feature Flag 边界**: 让 flag SDK 留在基础设施层，把 flag 结果映射为显式状态，而不是在 View 中直接查询。
+
+## 测试指南
+
+使用 TGReduxKit 时，业务代码有三层可测试的粒度，推荐按 **80 / 15 / 5** 的比例分配：
+
+### 第一层：纯 Reducer 测试（主力，~80%）
+
+用 `TestStore` 同步测试状态机逻辑——不需要 App、不需要 middleware、不需要异步等待。
+
+```swift
+import Testing
+@testable import YourApp
+
+@Test func searchFlow() {
+    let store = TestStore(initialState: CatalogState(), reducer: catalogReducer)
+
+    // 用户输入 → 进入搜索态
+    store.send(.searchQueryChanged("iPhone"))
+    #expect(store.state.isSearching == true)
+
+    // 结果返回 → 退出搜索态
+    store.send(.searchCompleted("iPhone", [iphoneProduct]))
+    #expect(store.state.isSearching == false)
+    #expect(store.state.visibleProducts.count == 1)
+
+    // 清空 → 重置
+    store.send(.searchQueryChanged(""))
+    #expect(store.state.isSearching == false)
+    #expect(store.state.visibleProducts.isEmpty == false)
+}
+```
+
+这一层覆盖了所有状态转移路径——bug 最常见的地方。
+
+### 第二层：Middleware 单元测试（补充，~15%）
+
+Middleware 是闭包，可以构造 Store + mock 依赖来直接测试，不需要启动 App：
+
+```swift
+@Test func searchDebounceCancelsPreviousTask() async throws {
+    let mockService = MockSearchService()
+    let deps = ShoppingDependencies(productSearchService: mockService)
+
+    let store = Store(
+        initialState: ShoppingState(),
+        reducer: shoppingReducer,
+        middlewares: [makeProductSearchMiddleware(dependencies: deps)]
+    )
+
+    // 快速连续输入 3 次
+    store.dispatch(.catalog(.searchQueryChanged("i")))
+    store.dispatch(.catalog(.searchQueryChanged("ip")))
+    store.dispatch(.catalog(.searchQueryChanged("iph")))
+
+    // 防抖期间，搜索尚未触发
+    #expect(mockService.callCount == 0)
+
+    // 等待 debounce（300ms）
+    try await Task.sleep(nanoseconds: 400_000_000)
+
+    // 只触发一次，且使用最终 query
+    #expect(mockService.callCount == 1)
+    #expect(mockService.lastQuery == "iph")
+}
+```
+
+关键技巧：把网络、数据库等外部依赖**协议化**，在测试中注入 mock。这与 Demo 中 `ShoppingDependencies` 的设计一致。
+
+### 第三层：集成冒烟测试（少量，~5%）
+
+把 middleware + reducer 串联，验证关键业务流程的端到端状态流转：
+
+```swift
+@Test func fullSearchAndAddToCart() async throws {
+    let store = Store(
+        initialState: ShoppingState(),
+        reducer: shoppingReducer,
+        middlewares: [makeProductSearchMiddleware(dependencies: .test)]
+    )
+
+    store.dispatch(.catalog(.searchQueryChanged("MacBook")))
+    try await Task.sleep(nanoseconds: 400_000_000)
+
+    // 搜索结果正确
+    #expect(store.state.catalog.visibleProducts.count == 1)
+
+    // 加入购物车后的状态
+    store.dispatch(.cart(.add(store.state.catalog.visibleProducts[0])))
+    #expect(store.state.cart.totalQuantity == 1)
+    #expect(store.state.cart.totalPrice == 1999)
+}
+```
+
+### 速度对比
+
+| 层级 | 单次耗时 | 依赖 | 适合测什么 |
+|------|---------|------|-----------|
+| TestStore（纯 reducer） | 微秒级 | 无 | 状态机逻辑 |
+| Middleware 单测 | 毫秒级 | Mock 协议 | 副作用编排（debounce、重试） |
+| 集成测试 | 百毫秒级 | Mock + sleep | 关键流程冒烟 |
 
 ## 文档生成
 
