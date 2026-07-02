@@ -251,9 +251,9 @@ import Testing
 }
 ```
 
-### 6. 模块化 Reducer
+### 6. 模块化 Reducer（组合式）
 
-随着应用变大，可以将 Reducer 拆分管理。
+使用 `combineReducers` 和 `pullback` 将 Feature reducer 组合为根 reducer：
 
 ```swift
 struct AppState {
@@ -261,11 +261,21 @@ struct AppState {
     var user: UserState
 }
 
-let appReducer: Reducer<AppState, AppAction> = { state, action in
-    counterReducer(&state.counter, action)
-    userReducer(&state.user, action)
-}
+let appReducer: Reducer<AppState, AppAction> = combineReducers(
+    pullback(counterReducer,
+        state: \.counter,
+        extract: { if case .counter(let a) = $0 { a } else { nil } }
+    ),
+    pullback(userReducer,
+        state: \.user,
+        extract: { if case .user(let a) = $0 { a } else { nil } }
+    )
+)
 ```
+
+`pullback` 将子 reducer 从 `(ChildState, ChildAction)` 提升为 `(ParentState, ParentAction)`，只在 extract 返回非 nil 时运行。`combineReducers` 按声明顺序执行所有子 reducer。**每个 Feature 一条线，新增模块只加一行。**
+
+注：也可以继续使用手写 switch 的方式——两种写法完全等价。组合式在 Feature 数量 ≥3 时更清晰。
 
 ### 7. 调试中间件
 

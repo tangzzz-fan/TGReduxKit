@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-03
+
+### Added
+- **Core / Reducer Composition**: 新增 `combineReducers(_:)` 和 `pullback(_:state:extract:)`。
+  - `combineReducers` 按顺序合并多个 reducer，每个 reducer 自己决定是否响应当前 action。
+  - `pullback` 将子 reducer 的 `(ChildState, ChildAction)` 提升为 `(ParentState, ParentAction)`，只在 extract 闭包返回非 nil 时运行。
+  - 零成本抽象——纯 free function，不引入协议或 CasePath。
+- **Tests**: 新增 `ReducerCompositionTests`（10 个测试用例），覆盖：pullback 隔离性、combineReducers 执行顺序、深度嵌套、空列表/单 reducer、多 extract pattern、导航组合、shopping 完整流程。
+- **Documentation**: README「模块化 Reducer」章节更新为 `combineReducers` + `pullback` 组合式写法。
+
 ## [1.3.1] - 2026-07-03
 
 ### Added
