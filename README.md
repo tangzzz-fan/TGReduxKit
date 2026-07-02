@@ -342,6 +342,8 @@ let shoppingReducer = combineReducers(
 
 完整的 Demo 代码见 `Examples/TGReduxKitDemo/TGReduxKitDemo/Redux.swift`。
 
+> 更多实战场景（购物 App + 车载 App）见 [多 Feature 联动指南](Docs/MULTI_FEATURE_GUIDE.md)。
+
 ### 7. 调试中间件
 
 ```swift
