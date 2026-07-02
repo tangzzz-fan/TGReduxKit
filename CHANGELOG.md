@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-03
+
+### Added
+- **Core / Error Handling**: 新增错误处理统一通道。
+  - `ErrorAction` 协议 — Action 中的错误 case 可遵循该协议标记错误来源。
+  - `store.runTask(id:catching:operation:)` — catch 异步错误后自动转为 action 回流。
+  - `errorReportingMiddleware(extract:reporter:)` — 全局错误拦截上报 middleware（支持自定义 extract 闭包）。
+  - `errorReportingMiddleware(reporter:)` — 便捷版本，适用于 Action 类型直接遵循 `ErrorAction` 的场景。
+- **Documentation / README**:
+  - 新增「跨 Feature 通信」章节：三种模式（父级 middleware 转发/reducer 内联联动/显式协调 action）及适用场景。
+  - 新增「错误处理指南」章节：`runTask(catching:)` 业务错误恢复 + `errorReportingMiddleware` 全局上报。
+- **CI**: 新增 `.github/workflows/ci.yml`，包含 macOS build/test + iOS Simulator build + SwiftLint。
+- **Tests**: 新增 `ErrorHandlingTests`（6 个测试用例），覆盖 catching、silent drop、cancellation 不触发、extract 匹配/跳过。
+
 ## [1.2.0] - 2026-07-03
 
 ### Added
