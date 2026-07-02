@@ -439,5 +439,5 @@ TGReduxKit v1.2 ~ v1.4 的新增能力围绕一个核心思路：
 
 两个场景的完整代码可以在以下位置找到：
 
-- 购物 App：`Examples/TGReduxKitDemo/TGReduxKitDemo/Redux.swift`
-- 测试覆盖：`Tests/TGReduxKitTests/`（`TestStoreTests`、`AsyncPrimitivesTests`、`ErrorHandlingTests`、`CrossFeatureTests`、`ReducerCompositionTests`）
+- 购物 App：`../Examples/TGReduxKitDemo/TGReduxKitDemo/Redux.swift`
+- 测试覆盖：`../Tests/TGReduxKitTests/`（`TestStoreTests`、`AsyncPrimitivesTests`、`ErrorHandlingTests`、`CrossFeatureTests`、`ReducerCompositionTests`）

@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 点击任一 entry 查看 before/after State 详情。
   - 内建 Pause / Resume / Clear 控件。
 - **Tests**: 新增 `TimeTravelTests`（9 个测试用例），覆盖录制、跳转、筛选、暂停、上限裁剪、清空、JSON 导出、跨 Feature 时间线。
-- **Docs**: 新增 `Docs/TIME_TRAVEL_GUIDE.md`，覆盖购物 App 和车载 App 两个场景的时间旅行调试用法。
+- **Docs**: 新增 `docs/TIME_TRAVEL_GUIDE.md`，覆盖购物 App 和车载 App 两个场景的时间旅行调试用法。
 
 ## [1.4.1] - 2026-07-03
 

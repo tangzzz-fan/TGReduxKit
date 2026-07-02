@@ -59,7 +59,7 @@ swiftlint
 ## Versioning & Changelog
 
 - Follows [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/)
-- Current version: 1.1.0
+- Current version: 2.0.0
 - CHANGELOG.md has `[Unreleased]` section at top for pending changes
 - Release workflow: move Unreleased content to new version section → bump version → commit → git tag
 
