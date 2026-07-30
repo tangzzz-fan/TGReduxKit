@@ -124,6 +124,8 @@ struct ContentView: View {
 | [时间旅行调试](Docs/TIME_TRAVEL_GUIDE.md) | `TimeTravelRecorder` + `TimelineInspector` 使用指南 |
 | [Feature Flag 集成](Docs/FEATURE_FLAG_GUIDE.md) | Demo 中的 Feature Flag 架构设计与落地方案 |
 | [架构与异步流分析](Docs/ASYNC_FLOW_ANALYSIS.md) | 源码架构分析与异步流处理详解 |
+| [异步竞态与任务取消](Docs/ASYNC_RACE_AND_CANCELLATION.md) | 问题 A/B：多个不确定异步答案、latest-wins 与生命周期取消 |
+| [为什么转向 Redux](Docs/WHY_REDUX_ADOPTION.md) | 设计思路、选型对比与团队内采纳 / 说服指南 |
 | [框架分析报告](Docs/ANALYSIS_AND_GUIDE.md) | 框架能力边界分析与分阶段改进方案 |
 
 ## 最佳实践
