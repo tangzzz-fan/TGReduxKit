@@ -50,16 +50,18 @@ swiftlint
 
 **Module layout**:
 - `Core/` — Store, ScopedStore, Reducer, Middleware, CancellationID, DebugMiddleware
-- `Navigation/` — TGRoute protocol, NavigationState, NavigationAction, navigationReducer, TGNavigationStack (SwiftUI wrapper)
-- `SwiftUI/` — Store.binding (state→Binding bridge), StoreProvider (.provideStore environment injection)
-- `Examples/TGReduxKitDemo/` — Full demo with catalog/cart/feature-flags, scoped stores, deep links
+- `SwiftUI/` — StoreType, Store.binding (state→Binding bridge), StoreProvider (.provideStore environment injection)
+- `Debug/` / `Testing/` — Time travel recorder, TestStore
+- `Examples/TGReduxKitDemo/` — Full demo with catalog/cart/feature-flags, scoped stores, deep links（导航依赖独立包 `TGNavigationStack`）
+
+**Related package**: Navigation (`TGRoute` / `NavigationState` / `NavigationAction` / `navigationReducer` / `TGNavigationStack`) lives in sibling repo `https://github.com/tangzzz-fan/TGNavigationStack` — not part of this package.
 
 **State isolation pattern**: Root `ShoppingState` contains `CatalogState`, `CartState`, `FeatureFlagsState`. Each feature gets a `ScopedStore` via `store.scope(state: \.catalog, action: ShoppingAction.catalog)`. Feature flag SDK stays in infrastructure layer — only derived presentation state reaches business Views.
 
 ## Versioning & Changelog
 
 - Follows [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/)
-- Current version: 2.0.0
+- Current version: 3.0.0（Unreleased 含导航外置等 breaking 变更，下一正式版应抬 major）
 - CHANGELOG.md has `[Unreleased]` section at top for pending changes
 - Release workflow: move Unreleased content to new version section → bump version → commit → git tag
 

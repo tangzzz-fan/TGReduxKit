@@ -103,11 +103,7 @@ TextField(
 
 当前库包含：
 
-- `TGRoute`
-- `NavigationState<Route>`
-- `NavigationAction<Route>`
-- `navigationReducer`
-- `TGNavigationStack`（位于独立 target `TGReduxKitNavigation`）
+- 导航能力已迁移到独立仓库 `TGNavigationStack`（包含 `TGRoute`、`NavigationState<Route>`、`NavigationAction<Route>`、`navigationReducer` 与 `TGNavigationStack`）
 
 这说明作者已经把“导航状态化”纳入框架边界。
 

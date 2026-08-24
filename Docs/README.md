@@ -35,4 +35,4 @@
 ## 模块说明
 
 - `TGReduxKit`：核心状态管理、异步原语、调试与测试工具。
-- `TGReduxKitNavigation`：独立的 SwiftUI 导航适配 target，提供 `TGNavigationStack`，依赖核心库的 `NavigationState` / `NavigationAction` 模型。
+- `TGNavigationStack`：已迁移到独立仓库 `https://github.com/tangzzz-fan/TGNavigationStack`，提供导航状态模型、`navigationReducer` 与 SwiftUI `TGNavigationStack` 适配层。
