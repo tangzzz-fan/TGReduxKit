@@ -16,17 +16,12 @@ Sources/TGReduxKit/
     Reducer.swift          -- 纯函数 Reducer 类型
     CancellationID.swift   -- 轻量取消标识符
     DebugMiddleware.swift  -- 调试中间件（action log / state diff）
-  Navigation/
-    TGRoute.swift           -- 路由协议
-    NavigationState.swift   -- 导航状态容器
-    NavigationAction.swift  -- 导航 Action
-    NavigationReducer.swift -- 导航 Reducer
   SwiftUI/
     Store+Binding.swift  -- 状态到 Binding 的桥接
     StoreProvider.swift  -- Environment 注入辅助
 
-Sources/TGReduxKitNavigation/
-  TGNavigationStack.swift -- 独立的 SwiftUI NavigationStack 适配层
+External package:
+  TGNavigationStack       -- 独立仓库，承载导航状态模型、navigationReducer 与 SwiftUI 适配层
 ```
 
 ### 1.2 核心类型定义

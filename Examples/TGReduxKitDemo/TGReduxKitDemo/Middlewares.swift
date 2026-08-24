@@ -127,8 +127,11 @@ public let analyticsMiddleware: Middleware<ShoppingState, ShoppingAction> = { _,
         print("📊 [Analytics] User added \(product.name) to cart.")
 
     case .navigation(let navAction):
-        if case .push(let route) = navAction {
+        switch navAction {
+        case .push(let route):
             print("📊 [Analytics] User navigated to \(route).")
+        default:
+            break
         }
 
     default:

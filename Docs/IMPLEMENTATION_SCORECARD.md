@@ -14,8 +14,8 @@
 - 修复过程：[`REVIEW_REMEDIATION_REPORT.md`](./REVIEW_REMEDIATION_REPORT.md)
 - 并发边界：[`STRICT_CONCURRENCY_MIGRATION.md`](./STRICT_CONCURRENCY_MIGRATION.md)
 
-**审阅基线**：`3.0.0` 合并后 + Navigation target 拆分与 Store 协议统一（相对修复前约 7.2 → 当前约 **9.0 / 10**）  
-**验证**：`swift build` / `swift test`（76 tests）通过
+**审阅基线**：`3.0.0` 合并后 + Store 协议统一与导航能力外置（相对修复前约 7.2 → 当前约 **9.0 / 10**）
+**验证**：`swift build` / `swift test`（75 tests）通过
 **规模**：Sources ~1.5k LOC，Tests ~2k LOC
 
 ---
@@ -30,7 +30,7 @@
 | 综合分 | **9.0 / 10** |
 | 最高维 | 架构 9.0 |
 | 最低维 | Docs & DX 7.5 |
-| 测试 | 76 通过 |
+| 测试 | 75 通过 |
 
 ---
 
@@ -40,7 +40,7 @@
 |------|-----|------|
 | 架构清晰度 | 9.0 | `Store → Middleware onion → Reducer → @Observable` 边界清晰；`scope` / `pullback` / `combineReducers` 组合模型克制；零外部依赖，Core 体量可控 |
 | 并发正确性 | 8.5 | `Reducer` / composition / `Middleware` 同属 `@MainActor`；`runTask` 替换等待旧任务完成 + token 防误清。协作取消仍是调用方责任（合理） |
-| API 设计 | 9.0 | `ActionDispatcher` 命名冲突已解；`StoreType` 已统一 `Store` / `ScopedStore` 的 `state`、`dispatch`、`binding` 与 `provideStore` 接口；`TGNavigationStack` 已拆为独立 target 并回发 `NavigationAction`。root-only async 边界已明确写入 API 注释与文档 |
+| API 设计 | 9.0 | `ActionDispatcher` 命名冲突已解；`StoreType` 已统一 `Store` / `ScopedStore` 的 `state`、`dispatch`、`binding` 与 `provideStore` 接口；导航状态模型与 `TGNavigationStack` 已迁移到独立仓库。root-only async 边界已明确写入 API 注释与文档 |
 | 异步原语 | 8.3 | throttle 名实、runTask 串行替换已可信；root/scoped 责任边界已明确。timeout / throttle 与 in-flight 重叠仍依赖协作取消，语义继续保持克制 |
 | 测试 | 9.1 | 本轮边界有回归覆盖；新增 `binding` KeyPath、导航 `.setPath`、Equatable 无变化跳过通知等测试。`TestStore` 已改为抛出结构化错误，更适合 Swift Testing / XCTest 报告 |
 | Debug / Time Travel | 8.5 | timeline index、`snapshot(at:)`、`initialState`、`maxEntries`、`exportJSON` 坐标系已修稳 |
@@ -64,7 +64,7 @@
 9. `Store` / `ScopedStore` 已补 `binding(get: KeyPath, send:)` 重载
 10. `TGNavigationStack` 的 path / dismiss 事件已回到 reducer
 11. `Store` / `ScopedStore` 已在 `State: Equatable` 且值不变时跳过多余通知
-12. `TGNavigationStack` 已拆成独立的 `TGReduxKitNavigation` target
+12. 导航状态模型与 SwiftUI 适配层已拆到独立仓库 `TGNavigationStack`
 13. `StoreType` 已统一 `Store` / `ScopedStore` 的基础 SwiftUI API 面
 14. root-only async 边界已明确：`runTask` / `debounce` / `throttle` / retry / timeout 不下放到 `ScopedStore`
 15. `TestStore` 已从 `fatalError` 切换为结构化断言错误
@@ -143,7 +143,7 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 | 阶段 | 目标分 | 主要动作 |
 |------|--------|----------|
-| 当前 | 9.0 | 严格并发、导航单向流、Navigation target 拆分、StoreType 统一协议已收口 |
+| 当前 | 9.0 | 严格并发、导航单向流、导航仓库外置、StoreType 统一协议已收口 |
 | 下一跳 | ~9.2 | 继续补异步语义边界测试，瘦身历史分析文档 |
 | 再往后 | 9.0+ | P2/P3 打磨；仅在真实瓶颈出现时加深 Observation |
 

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 181A97752F17EB0100053FDC /* TGReduxKit */; };
-                18F0A0012F17E6350088449D /* TGReduxKitNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGReduxKitNavigation */; };
+                18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGNavigationStack */; };
 		182584882F17E6350088449D /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 182584872F17E6350088449D /* TGReduxKit */; };
 /* End PBXBuildFile section */
 
@@ -58,7 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                                18F0A0012F17E6350088449D /* TGReduxKitNavigation in Frameworks */,
+                                18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */,
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
 				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
 			);
@@ -121,7 +121,7 @@
 			);
 			name = TGReduxKitDemo;
 			packageProductDependencies = (
-                                18F0A0002F17E6350088449D /* TGReduxKitNavigation */,
+                                18F0A0002F17E6350088449D /* TGNavigationStack */,
 				182584872F17E6350088449D /* TGReduxKit */,
 				181A97752F17EB0100053FDC /* TGReduxKit */,
 			);
@@ -209,6 +209,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */,
+                                18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1825842A2F17E3260088449D /* Products */;
@@ -601,10 +602,22 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+                18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */ = {
+                        isa = XCRemoteSwiftPackageReference;
+                        repositoryURL = "https://github.com/tangzzz-fan/TGNavigationStack";
+                        requirement = {
+                                branch = main;
+                                kind = branch;
+                        };
+                };
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-                18F0A0002F17E6350088449D /* TGReduxKitNavigation */ = {
+                18F0A0002F17E6350088449D /* TGNavigationStack */ = {
                         isa = XCSwiftPackageProductDependency;
-                        productName = TGReduxKitNavigation;
+                        package = 18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */;
+                        productName = TGNavigationStack;
                 };
 		181A97752F17EB0100053FDC /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;

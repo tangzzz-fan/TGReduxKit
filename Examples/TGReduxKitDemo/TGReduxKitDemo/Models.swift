@@ -1,5 +1,5 @@
 import Foundation
-import TGReduxKit
+import TGNavigationStack
 
 // MARK: - Models
 

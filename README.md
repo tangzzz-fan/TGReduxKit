@@ -111,10 +111,18 @@ struct ContentView: View {
 }
 ```
 
-如果你使用 SwiftUI 导航适配层 `TGNavigationStack`，请额外导入独立 target：
+如果你使用导航状态模型或 SwiftUI 适配层，请额外依赖独立仓库 [`TGNavigationStack`](https://github.com/tangzzz-fan/TGNavigationStack)（本库不再内置导航 API）：
 
 ```swift
-import TGReduxKitNavigation
+dependencies: [
+    .package(url: "https://github.com/tangzzz-fan/TGReduxKit", from: "3.0.0"),
+    .package(url: "https://github.com/tangzzz-fan/TGNavigationStack", from: "1.0.0"),
+]
+```
+
+```swift
+import TGReduxKit
+import TGNavigationStack
 ```
 
 ## StoreType 与异步边界

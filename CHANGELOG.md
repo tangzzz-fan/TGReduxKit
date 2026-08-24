@@ -13,12 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Core / Performance**: `Store` 在初始化时预组合 middleware dispatch 管道，避免每次 `dispatch(_:)` 重建 onion 闭包链。
-- **Navigation / Unidirectional Flow**: `TGNavigationStack` 改为读取 `NavigationState` 并回发 `NavigationAction`。
-  - 路径变化通过 `.setPath([Route])` 进入 reducer，不再直接改写 `NavigationState.path`。
-  - sheet / fullScreenCover 的 dismiss 也通过 `.dismiss` 回到 reducer，使 time-travel 和 middleware 能观察到系统导航事件。
-- **Navigation / Packaging**: `TGNavigationStack` 已拆分到独立的 `TGReduxKitNavigation` target。
-  - 核心 `TGReduxKit` 保留 `TGRoute`、`NavigationState`、`NavigationAction` 和 `navigationReducer`。
-  - 需要 SwiftUI 导航适配层的接入方额外导入 `TGReduxKitNavigation`。
 - **Observation / Equatable**: `Store` 与 `ScopedStore` 现在会在 `State: Equatable` 且值未变化时跳过多余赋值和子 store 通知。
   - 非 `Equatable` state 继续保持原有通知语义。
 - **SwiftUI / API Surface**: 新增 `StoreType` 协议，统一 `Store` / `ScopedStore` 的最小公共接口。
@@ -29,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Testing / DX**: `TestStore` 断言失败从 `fatalError` 切换为抛出 `TestStoreAssertionError`。
   - `send(_:expect:)`、`assert(_:_:)`、`assert(equals:)` 现在可直接接入 Swift Testing / XCTest 的错误报告。
 - **Docs**: 新增 `Docs/README.md` 作为文档分层入口，并将 README 的文档索引收敛为「接入指南 / 架构分析 / 审阅与维护」三层。
+- **Docs**: Demo、文档与 `CLAUDE.md` 模块说明对齐独立导航仓库。
+
+### Removed
+- **Breaking / Navigation**: 导航状态模型与 SwiftUI 适配层已整体迁移到独立仓库 [`TGNavigationStack`](https://github.com/tangzzz-fan/TGNavigationStack)。
+  - 移除 `TGReduxKit` 内的 `TGRoute`、`NavigationState`、`NavigationAction`、`navigationReducer`。
+  - 移除 `TGReduxKitNavigation` product / target 及其中的 `TGNavigationStack`。
+  - 独立包中的 `TGNavigationStack` 继续保证单向数据流：path / dismiss 通过 `NavigationAction` 回 reducer。
+  - 接入方需额外添加依赖：`https://github.com/tangzzz-fan/TGNavigationStack`（建议 `from: "1.0.0"`，或临时跟随 `main`）。
+  - Demo 工程已改为依赖远程 `TGNavigationStack` package。
 
 ## [3.0.0] - 2026-08-25
 

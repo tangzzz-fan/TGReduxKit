@@ -1,6 +1,6 @@
 import SwiftUI
 import TGReduxKit
-import TGReduxKitNavigation
+import TGNavigationStack
 
 // MARK: - Shopping App Entry
 
