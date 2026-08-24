@@ -12,6 +12,8 @@
 
 本文档以当前仓库源码为准，不以口头约定、历史印象或理想设计为准。
 
+> 注：本文保留了早期架构分析的历史上下文，适合做设计回顾；若要看当前接入入口，请先从 [Docs/README.md](./README.md) 开始，再结合 [STRICT_CONCURRENCY_MIGRATION.md](./STRICT_CONCURRENCY_MIGRATION.md) 与 [IMPLEMENTATION_SCORECARD.md](./IMPLEMENTATION_SCORECARD.md) 阅读。
+
 ---
 
 ## 2. 当前源码基线

@@ -27,9 +27,13 @@ let profileStore = store.scope(
 
 子视图可以只依赖 `ScopedStore<ProfileState, ProfileAction>`，避免直接耦合根状态树。
 
+`ScopedStore` 只镜像 root store 的同步 View API。`runTask`、`debounce`、`throttle`、retry / timeout 等异步原语仍然只属于 root `Store`，这样任务生命周期和取消语义都集中在同一个边界内。
+
 ## 2. 处理异步操作
 
 Reducer 必须保持纯净，副作用应在 **Middleware** 中处理。
+
+这里的约束是明确的：**异步副作用只允许 root `Store` 持有**。View 可以统一依赖 `StoreType`，但真正启动任务的地方应该在 root store 所在的 middleware / 协调层。
 
 ```swift
 enum AppAction {
@@ -117,20 +121,20 @@ store.cancelTask(id: "search")
 import Testing
 @testable import TGReduxKit
 
-@Test func counterFlow() {
+@Test func counterFlow() throws {
     let store = TestStore(initialState: CounterState(), reducer: counterReducer)
 
     // send + expect 合并断言
-    store.send(.increment, expect: CounterState(count: 1))
+    try store.send(.increment, expect: CounterState(count: 1))
 
     // 逐步 send + assert
     store.send(.increment)
     store.send(.decrement)
-    store.assert(equals: CounterState(count: 1))
+    try store.assert(equals: CounterState(count: 1))
 
     // 自定义 predicate 断言
     store.send(.setMessage("Done"))
-    store.assert("state should match") { state in
+    try store.assert("state should match") { state in
         state.count == 1 && state.message == "Done"
     }
 
@@ -139,6 +143,8 @@ import Testing
     #expect(history.count == 4) // 初始状态 + 3 次 send
 }
 ```
+
+`TestStore` 的断言失败现在会抛出结构化的 `TestStoreAssertionError`，能更自然地接入 Swift Testing / XCTest 的失败报告，而不会通过 `fatalError` 直接终止整个测试进程。
 
 ## 6. 调试中间件
 

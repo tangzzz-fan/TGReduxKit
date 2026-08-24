@@ -10,7 +10,7 @@
 import Testing
 @testable import YourApp
 
-@Test func searchFlow() {
+@Test func searchFlow() throws {
     let store = TestStore(initialState: CatalogState(), reducer: catalogReducer)
 
     // 用户输入 → 进入搜索态
@@ -24,12 +24,15 @@ import Testing
 
     // 清空 → 重置
     store.send(.searchQueryChanged(""))
-    #expect(store.state.isSearching == false)
-    #expect(store.state.visibleProducts.isEmpty == false)
+    try store.assert("clearing query should exit searching mode") { state in
+        state.isSearching == false && state.visibleProducts.isEmpty == false
+    }
 }
 ```
 
 这一层覆盖了所有状态转移路径——bug 最常见的地方。
+
+`TestStore` 的 `send(_:expect:)` / `assert(...)` 现在通过抛出 `TestStoreAssertionError` 报告失败，因此可以直接和 Swift Testing、XCTest 的错误模型对齐，而不会用 `fatalError` 终止整个测试进程。
 
 ## 第二层：Middleware 单元测试（补充，~15%）
 

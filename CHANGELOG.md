@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SwiftUI / API Surface**: 新增 `StoreType` 协议，统一 `Store` / `ScopedStore` 的最小公共接口。
   - `binding` 现在基于 `StoreType` 提供，`provideStore` 也收敛为单个泛型重载。
   - View 层可以对 root/scoped store 复用同一套 `state` / `dispatch` / `binding` 接口。
+- **Async Boundary**: 明确 `StoreType` 只统一 View 层同步 API，`runTask` / `debounce` / `throttle` / retry / timeout 继续保持为 root `Store` 能力。
+  - `ScopedStore` 不转发任务生命周期 API，异步副作用统一留在 root store 的 middleware / 协调层。
+- **Testing / DX**: `TestStore` 断言失败从 `fatalError` 切换为抛出 `TestStoreAssertionError`。
+  - `send(_:expect:)`、`assert(_:_:)`、`assert(equals:)` 现在可直接接入 Swift Testing / XCTest 的错误报告。
+- **Docs**: 新增 `Docs/README.md` 作为文档分层入口，并将 README 的文档索引收敛为「接入指南 / 架构分析 / 审阅与维护」三层。
 
 ## [3.0.0] - 2026-08-25
 

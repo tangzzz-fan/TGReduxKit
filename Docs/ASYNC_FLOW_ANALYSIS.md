@@ -35,7 +35,7 @@ Sources/TGReduxKitNavigation/
 |------|------|------|
 | `Store<State, Action>` | 单一数据源，`@MainActor @Observable` | `class` |
 | `ScopedStore<State, Action>` | Feature 级子 Store | `class` |
-| `StoreType<State, Action>` | `Store` / `ScopedStore` 公共协议面 | `state` / `dispatch` |
+| `StoreType<State, Action>` | `Store` / `ScopedStore` 公共协议面 | `state` / `dispatch` / SwiftUI `binding`（异步原语仍为 root-only） |
 | `Reducer<State, Action>` | 主 actor 上的纯函数，同步变换状态 | `@MainActor (inout State, Action) -> Void` |
 | `ActionDispatcher<Action>` | 主线程 Action 派发 | `@MainActor (Action) -> Void` |
 | `Middleware<State, Action>` | 副作用拦截器，同步签名 | `@MainActor (Store, Action, @escaping ActionDispatcher) -> Void` |

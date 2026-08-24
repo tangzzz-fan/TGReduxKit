@@ -1,6 +1,12 @@
 import Foundation
 import Observation
 
+/// A feature-scoped projection of a root `Store`.
+///
+/// `ScopedStore` mirrors the root store's synchronous view API (`state`, `dispatch`, `binding`,
+/// nested `scope`) but deliberately does not expose task-management helpers such as `runTask`.
+/// Async side effects stay rooted in middleware / root store coordination so cancellation and
+/// latest-wins semantics remain centralized.
 @MainActor
 @Observable
 public final class ScopedStore<State, Action>: StoreType, ScopeObserver {

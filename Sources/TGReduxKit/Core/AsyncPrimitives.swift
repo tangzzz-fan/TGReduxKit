@@ -34,6 +34,10 @@ public enum BackoffStrategy: Sendable {
 // MARK: - Debounce
 
 extension Store {
+    /// Root-store-only async primitive.
+    ///
+    /// `debounce` lives on `Store` rather than `StoreType` so all cancellable async work shares the
+    /// same task registry anchored at the root state boundary.
     /// Debounces an asynchronous operation by the specified delay.
     ///
     /// If called multiple times with the same `id` before the delay elapses, only
@@ -78,6 +82,10 @@ extension Store {
 // MARK: - Throttle
 
 extension Store {
+    /// Root-store-only async primitive.
+    ///
+    /// `throttle` stays on the root `Store` for the same reason as `runTask`: cancellation windows
+    /// and task bookkeeping are centralized instead of being duplicated across scoped stores.
     /// Throttles an asynchronous operation so it executes at most once within the specified interval.
     ///
     /// Unlike debounce (which waits for a pause), throttle executes immediately on the first call
@@ -130,6 +138,10 @@ extension Store {
 // MARK: - Retry
 
 extension Store {
+    /// Root-store-only async primitive.
+    ///
+    /// Retry bookkeeping is intentionally anchored at the root `Store` so scoped stores keep a
+    /// minimal view API while middleware owns side-effect orchestration.
     /// Runs an asynchronous operation with automatic retry on failure.
     ///
     /// If `operation` throws, it is retried up to `maxRetries` times with the
@@ -181,6 +193,10 @@ extension Store {
 // MARK: - Timeout
 
 extension Store where Action: Sendable {
+    /// Root-store-only async primitive.
+    ///
+    /// Timeout fallback dispatch participates in the root store's task lifecycle and cancellation
+    /// bookkeeping, so this helper is intentionally unavailable on `ScopedStore` / `StoreType`.
     /// Runs an asynchronous operation with a timeout. If the operation does not complete
     /// within the specified duration, a fallback action is dispatched.
     ///
