@@ -17,7 +17,7 @@ struct TestStoreTests {
         case reset
     }
 
-    let reducer: (inout TestState, TestAction) -> Void = { state, action in
+    let reducer: Reducer<TestState, TestAction> = { state, action in
         switch action {
         case .increment:
             state.count += 1
@@ -185,7 +185,7 @@ struct TestStoreTests {
             case clear
         }
 
-        let cartReducer: (inout CartState, CartAction) -> Void = { state, action in
+        let cartReducer: Reducer<CartState, CartAction> = { state, action in
             switch action {
             case .addItem(let name, let price):
                 state.items.append(name)
@@ -233,7 +233,7 @@ struct TestStoreTests {
             case toggle
         }
 
-        let parentReducer: (inout ParentState, ParentAction) -> Void = { state, action in
+        let parentReducer: Reducer<ParentState, ParentAction> = { state, action in
             switch action {
             case .child(let childAction):
                 switch childAction {

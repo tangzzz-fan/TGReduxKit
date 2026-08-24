@@ -67,11 +67,7 @@ struct CrossFeatureTests {
             if case .cart(.add(let productName)) = action {
                 // Feature A (cart) event → triggers Feature B (recommendations) async effect
                 store.runTask(id: "refresh-recs") {
-                    await MainActor.run {
-                        Task {
-                            await recorder.append("recommendations-refreshed-for-\(productName)")
-                        }
-                    }
+                    await recorder.append("recommendations-refreshed-for-\(productName)")
                     // In real code this would call a recommendation service
                     await store.dispatch(.recommendations(.loaded(["Related to \(productName)"])))
                 }

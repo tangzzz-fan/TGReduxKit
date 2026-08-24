@@ -29,7 +29,7 @@ public struct TimelineEntry<State: Sendable, Action: Sendable>: Sendable {
 /// recorder automatically. Once recorded you can inspect the timeline, jump
 /// back to earlier state snapshots, or export the timeline as JSON.
 @MainActor
-public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: @preconcurrency Sendable {
+public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: Sendable {
     /// All recorded timeline entries, in dispatch order.
     public private(set) var entries: [TimelineEntry<State, Action>] = []
 
@@ -38,7 +38,18 @@ public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: @preco
 
     /// The maximum number of entries to keep. When exceeded the oldest entry
     /// is dropped. `nil` means unbounded.
-    public var maxEntries: Int?
+    public var maxEntries: Int? {
+        didSet {
+            if let maxEntries, maxEntries < 0 {
+                self.maxEntries = 0
+            }
+
+            trimToMaxEntries()
+        }
+    }
+
+    private var nextIndex: Int = 0
+    private var recordedInitialState: State?
 
     public init() {}
 
@@ -55,19 +66,21 @@ public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: @preco
     ) {
         guard isRecording else { return }
 
+        if recordedInitialState == nil {
+            recordedInitialState = stateBefore
+        }
+
         let entry = TimelineEntry(
-            index: entries.count,
+            index: nextIndex,
             action: action,
             stateBefore: stateBefore,
             stateAfter: stateAfter,
             timestamp: Date()
         )
+        nextIndex += 1
 
         entries.append(entry)
-
-        if let max = maxEntries, entries.count > max {
-            entries.removeFirst(entries.count - max)
-        }
+        trimToMaxEntries()
     }
 
     // MARK: - Navigation
@@ -77,13 +90,12 @@ public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: @preco
     /// Use this to inspect what the state looked like after a particular
     /// action was processed.
     public func snapshot(at index: Int) -> State? {
-        guard entries.indices.contains(index) else { return nil }
-        return entries[index].stateAfter
+        entries.first { $0.index == index }?.stateAfter
     }
 
     /// Jump to the state *before* the first recorded action (the initial state).
     public var initialState: State? {
-        entries.first?.stateBefore
+        recordedInitialState
     }
 
     // MARK: - Inspection
@@ -101,6 +113,13 @@ public final class TimeTravelRecorder<State: Sendable, Action: Sendable>: @preco
     /// Clear the timeline.
     public func clear() {
         entries.removeAll()
+        nextIndex = 0
+        recordedInitialState = nil
+    }
+
+    private func trimToMaxEntries() {
+        guard let max = maxEntries, entries.count > max else { return }
+        entries.removeFirst(entries.count - max)
     }
 }
 
@@ -122,9 +141,9 @@ extension TimeTravelRecorder where State: Encodable, Action: Encodable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
         let actionEncoder = JSONEncoder()
-        let export = entries.map { entry -> ExportEntry in
-            let actionJSON = (try? actionEncoder.encode(entry.action))
-                .flatMap { String(data: $0, encoding: .utf8) } ?? "\(entry.action)"
+        let export = try entries.map { entry -> ExportEntry in
+            let actionData = try actionEncoder.encode(entry.action)
+            let actionJSON = String(decoding: actionData, as: UTF8.self)
             return ExportEntry(
                 index: entry.index,
                 timestamp: ISO8601DateFormatter().string(from: entry.timestamp),
@@ -157,7 +176,8 @@ extension TimeTravelRecorder where State: Encodable, Action: Encodable {
 /// - Important: The State must be `Equatable` so the middleware can capture
 ///   the "before" snapshot. The middleware copies state **before** calling
 ///   `next(action)`, so `stateBefore` is guaranteed to be the state prior to
-///   the reducer running.
+///   the reducer running for value-semantic state. For reference types, snapshot
+///   semantics depend on the referenced object not being mutated in place.
 public func timeTravelMiddleware<State: Equatable & Sendable, Action: Sendable>(
     recorder: TimeTravelRecorder<State, Action>
 ) -> Middleware<State, Action> {

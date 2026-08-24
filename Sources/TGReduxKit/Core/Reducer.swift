@@ -5,6 +5,10 @@ import Foundation
 /// A `Reducer` takes the current state (as an `inout` parameter) and an action,
 /// and updates the state synchronously. It should be a pure function without side effects.
 ///
+/// In TGReduxKit's Swift 6 concurrency model, reducers are main-actor isolated.
+/// This matches `Store` and `Middleware`, and lets module-level reducer constants
+/// participate cleanly in strict concurrency checking.
+///
 /// - Parameters:
 ///   - state: The current state to be modified.
 ///   - action: The action that triggered the state change.
@@ -19,4 +23,4 @@ import Foundation
 ///     }
 /// }
 /// ```
-public typealias Reducer<State, Action> = (inout State, Action) -> Void
+public typealias Reducer<State, Action> = @MainActor (inout State, Action) -> Void

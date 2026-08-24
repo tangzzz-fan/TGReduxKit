@@ -19,7 +19,7 @@ struct ErrorHandlingTests {
         let source: String
     }
 
-    let reducer: (inout TestState, TestAction) -> Void = { state, action in
+    let reducer: Reducer<TestState, TestAction> = { state, action in
         switch action {
         case .dataLoaded(let data):
             state.data = data

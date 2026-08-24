@@ -27,6 +27,7 @@ import Foundation
 ///
 /// - Parameter reducers: A variadic list of reducers to combine.
 /// - Returns: A single reducer that executes each child reducer in order.
+@MainActor
 public func combineReducers<State, Action>(
     _ reducers: Reducer<State, Action>...
 ) -> Reducer<State, Action> {
@@ -70,10 +71,11 @@ public func combineReducers<State, Action>(
 /// )
 /// // liftedReducer is now Reducer<AppState, AppAction>
 /// ```
+@MainActor
 public func pullback<ChildState, ChildAction, ParentState, ParentAction>(
     _ reducer: @escaping Reducer<ChildState, ChildAction>,
     state: WritableKeyPath<ParentState, ChildState>,
-    extract: @escaping (ParentAction) -> ChildAction?
+    extract: @escaping @MainActor (ParentAction) -> ChildAction?
 ) -> Reducer<ParentState, ParentAction> {
     return { parentState, parentAction in
         guard let childAction = extract(parentAction) else { return }

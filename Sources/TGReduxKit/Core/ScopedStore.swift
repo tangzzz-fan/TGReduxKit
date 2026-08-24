@@ -7,7 +7,7 @@ public final class ScopedStore<State, Action>: ScopeObserver {
     public private(set) var state: State
 
     @ObservationIgnored
-    private let dispatchAction: Dispatch<Action>
+    private let dispatchAction: ActionDispatcher<Action>
 
     @ObservationIgnored
     private let stateProvider: () -> State
@@ -17,7 +17,7 @@ public final class ScopedStore<State, Action>: ScopeObserver {
 
     internal init(
         initialState: State,
-        dispatch: @escaping Dispatch<Action>,
+        dispatch: @escaping ActionDispatcher<Action>,
         stateProvider: @escaping () -> State
     ) {
         self.state = initialState
@@ -38,16 +38,12 @@ public final class ScopedStore<State, Action>: ScopeObserver {
             dispatch: { [weak self] childAction in
                 self?.dispatch(actionTransform(childAction))
             },
-            stateProvider: { [weak self] in
-                guard let self else {
-                    fatalError("ScopedStore state accessed after deallocation")
-                }
-
+            stateProvider: {
                 return self.state[keyPath: keyPath]
             }
         )
 
-        addChildObserver(childStore)
+        _ = addChildObserver(childStore)
 
         return childStore
     }
@@ -64,9 +60,13 @@ public final class ScopedStore<State, Action>: ScopeObserver {
     }
 
     private func notifyChildObservers() {
-        childObservers = childObservers.reduce(into: [:]) { partialResult, entry in
-            guard let observer = entry.value.value else { return }
-            partialResult[entry.key] = WeakScopeObserver(observer)
+        let observerSnapshot = childObservers
+        for entry in observerSnapshot {
+            guard let observer = entry.value.value else {
+                childObservers.removeValue(forKey: entry.key)
+                continue
+            }
+
             observer.refreshStateFromParent()
         }
     }
