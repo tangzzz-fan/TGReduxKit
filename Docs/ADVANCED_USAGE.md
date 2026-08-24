@@ -82,6 +82,8 @@ store.throttle(id: "scroll-track", milliseconds: 200) {
 }
 ```
 
+第一次立即执行；在「节流窗口结束 **且** 本次 operation 完成」之前，同 ID 的后续调用会被忽略（leading-edge，不排队）。
+
 **Retry（重试）** — 自动重试失败的请求：
 
 ```swift
@@ -100,6 +102,8 @@ store.runTask(id: "fetch", timeoutMs: 5_000, fallback: { .fetchFailed(.timeout) 
     await store.dispatch(.dataLoaded(data))
 }
 ```
+
+超时与 `operation` 竞速；只有超时获胜后才调用 `fallback`。`operation` 仍须在 `dispatch` 前检查 `Task.isCancelled`。
 
 ## 4. 取消同类旧任务
 

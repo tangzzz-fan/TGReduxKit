@@ -152,6 +152,26 @@ store.debounce(id: "search", milliseconds: 300) {
 
 同类还有 `throttle`、带 retry / timeout / `catching` 的 `runTask` 变体，见 [ADVANCED_USAGE.md](./ADVANCED_USAGE.md)。
 
+### 4.4.1 `throttle`：leading-edge + in-flight 锁
+
+`throttle` 会立即执行第一次调用，并在锁持有期间忽略后续调用。锁释放条件是：
+
+1. 节流窗口（`milliseconds`）结束，**并且**
+2. 本次启动的 `operation` 已结束
+
+因此：慢操作不会因为「窗口已过」就被下一次 leading-edge 调用叠加上去。窗口内重复调用仍直接忽略（不排队、不 trailing）。
+
+### 4.4.2 `timeout`：先决出胜负，再决定是否 fallback
+
+`runTask(id:timeoutMs:fallback:)` 的语义：
+
+1. `operation` 与超时计时器竞速，先完成者获胜。
+2. 失败者通过 task group `cancelAll` 取消。
+3. **只有超时获胜后**才会调用 `fallback` 并 `dispatch`（fallback 不再与 operation 并行预跑）。
+4. 写入层仍是协作式：`operation` 在超时后若继续跑，必须自己 `guard !Task.isCancelled`，否则仍可能晚到写 State。
+
+`timeoutMs <= 0` 时不做竞速，等价于普通 `runTask(id:)`。
+
 ### 4.5 测试约定
 
 库内已有行为验证：同 ID 慢任务 + 快任务 → State 只保留后者（`testRunTaskCancelsPreviousTaskWithSameID`）。业务侧建议对「取消后不得 dispatch」写一条中间件或集成测试，避免回归时漏掉 `guard`。

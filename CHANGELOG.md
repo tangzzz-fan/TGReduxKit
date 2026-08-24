@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Async / Throttle**: `throttle` 的锁现在覆盖「节流窗口 ∪ 本次 in-flight operation」。
+  - 窗口结束后若首次操作仍在运行，后续 leading-edge 调用继续被忽略，避免叠加工。
+- **Async / Timeout**: `runTask(id:timeoutMs:fallback:)` 改为先决出竞速胜负，仅在超时获胜后调用 `fallback`。
+  - 计时器被取消（operation 先完成）时不再误判为超时。
+  - `timeoutMs <= 0` 时跳过超时竞速，行为与普通 `runTask(id:)` 一致。
+- **Docs**: 在 `ASYNC_RACE_AND_CANCELLATION.md` / `ADVANCED_USAGE.md` 中明确 throttle 锁与 timeout 协作取消边界。
+
+### Fixed
+- **Tests**: 新增回归用例，覆盖 throttle in-flight 锁、timeout 获胜前不调用 fallback、非正 `timeoutMs` 短路。
+
 ## [4.0.0] - 2026-08-25
 
 ### Added
