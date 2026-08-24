@@ -372,4 +372,34 @@ struct ReducerCompositionTests {
         store.send(.pop)
         #expect(store.state.path == ["Detail"])
     }
+
+    @MainActor
+    @Test func testNavigationReducerSetPathReplacesCurrentStack() {
+        struct NavState: Equatable {
+            var navigation = NavigationState<TestRoute>(path: [.detail, .cart])
+        }
+
+        enum NavAction: Equatable {
+            case navigation(NavigationAction<TestRoute>)
+        }
+
+        enum TestRoute: String, TGRoute {
+            case home
+            case detail
+            case cart
+        }
+
+        let reducer: Reducer<NavState, NavAction> = { state, action in
+            switch action {
+            case .navigation(let navAction):
+                navigationReducer(state: &state.navigation, action: navAction)
+            }
+        }
+
+        let store = TestStore(initialState: NavState(), reducer: reducer)
+
+        store.send(.navigation(.setPath([.home])))
+
+        #expect(store.state.navigation.path == [.home])
+    }
 }

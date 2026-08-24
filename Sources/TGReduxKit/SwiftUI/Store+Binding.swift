@@ -1,6 +1,6 @@
 import SwiftUI
 
-extension Store {
+extension StoreType {
     /// Creates a Binding that reads a value from the state and dispatches an action when modified.
     ///
     /// Usage:
@@ -21,15 +21,14 @@ extension Store {
             set: { newValue in self.dispatch(send(newValue)) }
         )
     }
-}
 
-extension ScopedStore {
+    /// Creates a Binding using a KeyPath for the read side.
     public func binding<Value>(
-        get: @escaping @Sendable (State) -> Value,
+        get keyPath: KeyPath<State, Value>,
         send: @escaping @Sendable (Value) -> Action
     ) -> Binding<Value> {
         Binding(
-            get: { get(self.state) },
+            get: { self.state[keyPath: keyPath] },
             set: { newValue in self.dispatch(send(newValue)) }
         )
     }

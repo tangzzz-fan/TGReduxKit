@@ -2,6 +2,9 @@ import Foundation
 
 /// Actions for manipulating the navigation state.
 public enum NavigationAction<Route: TGRoute>: Equatable, Sendable {
+    /// Replaces the current navigation path.
+    case setPath([Route])
+
     /// Pushes a new route onto the navigation stack.
     case push(Route)
     

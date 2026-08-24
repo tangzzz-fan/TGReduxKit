@@ -10,6 +10,7 @@
 Sources/TGReduxKit/
   Core/
     Store.swift            -- @MainActor @Observable 根 Store
+    StoreType.swift        -- Store / ScopedStore 共享协议面
     ScopedStore.swift      -- Feature 级子 Store
     Middleware.swift       -- 中间件类型定义
     Reducer.swift          -- 纯函数 Reducer 类型
@@ -20,10 +21,12 @@ Sources/TGReduxKit/
     NavigationState.swift   -- 导航状态容器
     NavigationAction.swift  -- 导航 Action
     NavigationReducer.swift -- 导航 Reducer
-    TGNavigationStack.swift -- SwiftUI NavigationStack 包装
   SwiftUI/
     Store+Binding.swift  -- 状态到 Binding 的桥接
     StoreProvider.swift  -- Environment 注入辅助
+
+Sources/TGReduxKitNavigation/
+  TGNavigationStack.swift -- 独立的 SwiftUI NavigationStack 适配层
 ```
 
 ### 1.2 核心类型定义
@@ -32,9 +35,10 @@ Sources/TGReduxKit/
 |------|------|------|
 | `Store<State, Action>` | 单一数据源，`@MainActor @Observable` | `class` |
 | `ScopedStore<State, Action>` | Feature 级子 Store | `class` |
-| `Reducer<State, Action>` | 纯函数，同步变换状态 | `(inout State, Action) -> Void` |
-| `Dispatch<Action>` | 主线程 Action 派发 | `@MainActor (Action) -> Void` |
-| `Middleware<State, Action>` | 副作用拦截器，同步签名 | `@MainActor (Store, Action, @escaping Dispatch) -> Void` |
+| `StoreType<State, Action>` | `Store` / `ScopedStore` 公共协议面 | `state` / `dispatch` |
+| `Reducer<State, Action>` | 主 actor 上的纯函数，同步变换状态 | `@MainActor (inout State, Action) -> Void` |
+| `ActionDispatcher<Action>` | 主线程 Action 派发 | `@MainActor (Action) -> Void` |
+| `Middleware<State, Action>` | 副作用拦截器，同步签名 | `@MainActor (Store, Action, @escaping ActionDispatcher) -> Void` |
 | `CancellationID` | 可取消任务标识符 | `Hashable, Sendable, ExpressibleByStringLiteral` |
 
 ---

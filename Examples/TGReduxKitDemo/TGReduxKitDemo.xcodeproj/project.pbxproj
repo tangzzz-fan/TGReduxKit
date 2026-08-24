@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 181A97752F17EB0100053FDC /* TGReduxKit */; };
+                18F0A0012F17E6350088449D /* TGReduxKitNavigation in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGReduxKitNavigation */; };
 		182584882F17E6350088449D /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 182584872F17E6350088449D /* TGReduxKit */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+                                18F0A0012F17E6350088449D /* TGReduxKitNavigation in Frameworks */,
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
 				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
 			);
@@ -119,6 +121,7 @@
 			);
 			name = TGReduxKitDemo;
 			packageProductDependencies = (
+                                18F0A0002F17E6350088449D /* TGReduxKitNavigation */,
 				182584872F17E6350088449D /* TGReduxKit */,
 				181A97752F17EB0100053FDC /* TGReduxKit */,
 			);
@@ -599,6 +602,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+                18F0A0002F17E6350088449D /* TGReduxKitNavigation */ = {
+                        isa = XCSwiftPackageProductDependency;
+                        productName = TGReduxKitNavigation;
+                };
 		181A97752F17EB0100053FDC /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGReduxKit;

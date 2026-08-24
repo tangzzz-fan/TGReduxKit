@@ -17,12 +17,20 @@ let package = Package(
             name: "TGReduxKit",
             targets: ["TGReduxKit"]
         ),
+        .library(
+            name: "TGReduxKitNavigation",
+            targets: ["TGReduxKitNavigation"]
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "TGReduxKit"
+        ),
+        .target(
+            name: "TGReduxKitNavigation",
+            dependencies: ["TGReduxKit"]
         ),
         .testTarget(
             name: "TGReduxKitTests",
