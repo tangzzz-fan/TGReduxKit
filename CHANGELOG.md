@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-08-25
+
 ### Added
 - **Docs**: 新增 `Docs/ASYNC_RACE_AND_CANCELLATION.md`，细化异步竞态（问题 A）与任务生命周期取消（问题 B）。
 - **Docs**: 新增 `Docs/WHY_REDUX_ADOPTION.md`，说明为何转向轻量 Redux、设计优势与团队内采纳路径。
