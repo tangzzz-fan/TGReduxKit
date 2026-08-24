@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tangzzz-fan/TGNavigationStack",
       "state" : {
-        "branch" : "main",
-        "revision" : "ef64aa8b77a0d10f7f13ac80e65ab5e7faca91ff"
+        "revision" : "324806df15b87112e0834e21091c58fc69098526",
+        "version" : "1.0.0"
       }
     }
   ],

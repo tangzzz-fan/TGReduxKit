@@ -115,7 +115,7 @@ struct ContentView: View {
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/tangzzz-fan/TGReduxKit", from: "3.0.0"),
+    .package(url: "https://github.com/tangzzz-fan/TGReduxKit", from: "4.0.0"),
     .package(url: "https://github.com/tangzzz-fan/TGNavigationStack", from: "1.0.0"),
 ]
 ```

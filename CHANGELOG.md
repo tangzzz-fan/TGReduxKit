@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-08-25
+
 ### Added
 - **SwiftUI / Ergonomics**: 为 `Store.binding` 和 `ScopedStore.binding` 新增 `KeyPath` 读取重载。
   - `store.binding(get: \.name, send: ...)` 现在可直接使用，减少样板闭包。
@@ -26,12 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Docs**: Demo、文档与 `CLAUDE.md` 模块说明对齐独立导航仓库。
 
 ### Removed
-- **Breaking / Navigation**: 导航状态模型与 SwiftUI 适配层已整体迁移到独立仓库 [`TGNavigationStack`](https://github.com/tangzzz-fan/TGNavigationStack)。
+- **Breaking / Navigation**: 导航状态模型与 SwiftUI 适配层已整体迁移到独立仓库 [`TGNavigationStack`](https://github.com/tangzzz-fan/TGNavigationStack)（`1.0.0`）。
   - 移除 `TGReduxKit` 内的 `TGRoute`、`NavigationState`、`NavigationAction`、`navigationReducer`。
   - 移除 `TGReduxKitNavigation` product / target 及其中的 `TGNavigationStack`。
   - 独立包中的 `TGNavigationStack` 继续保证单向数据流：path / dismiss 通过 `NavigationAction` 回 reducer。
-  - 接入方需额外添加依赖：`https://github.com/tangzzz-fan/TGNavigationStack`（建议 `from: "1.0.0"`，或临时跟随 `main`）。
-  - Demo 工程已改为依赖远程 `TGNavigationStack` package。
+  - 接入方需额外添加依赖：`.package(url: "https://github.com/tangzzz-fan/TGNavigationStack", from: "1.0.0")`。
+  - Demo 工程已改为依赖 `TGNavigationStack` `1.0.0`。
 
 ## [3.0.0] - 2026-08-25
 

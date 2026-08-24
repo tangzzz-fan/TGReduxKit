@@ -14,7 +14,7 @@
 - 修复过程：[`REVIEW_REMEDIATION_REPORT.md`](./REVIEW_REMEDIATION_REPORT.md)
 - 并发边界：[`STRICT_CONCURRENCY_MIGRATION.md`](./STRICT_CONCURRENCY_MIGRATION.md)
 
-**审阅基线**：`3.0.0` 合并后 + Store 协议统一与导航能力外置（相对修复前约 7.2 → 当前约 **9.0 / 10**）
+**审阅基线**：`4.0.0`（导航外置到 `TGNavigationStack` 1.0.0 + Store 协议统一；相对修复前约 7.2 → 当前约 **9.0 / 10**）
 **验证**：`swift build` / `swift test`（75 tests）通过
 **规模**：Sources ~1.5k LOC，Tests ~2k LOC
 
