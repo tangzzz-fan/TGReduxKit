@@ -15,7 +15,7 @@
 - 并发边界：[`STRICT_CONCURRENCY_MIGRATION.md`](./STRICT_CONCURRENCY_MIGRATION.md)
 
 **审阅基线**：`3.0.0` 合并后 + Navigation target 拆分与 Store 协议统一（相对修复前约 7.2 → 当前约 **9.0 / 10**）  
-**验证**：`swift build` / `swift test`（74 tests）通过  
+**验证**：`swift build` / `swift test`（76 tests）通过
 **规模**：Sources ~1.5k LOC，Tests ~2k LOC
 
 ---
@@ -30,7 +30,7 @@
 | 综合分 | **9.0 / 10** |
 | 最高维 | 架构 9.0 |
 | 最低维 | Docs & DX 7.5 |
-| 测试 | 74 通过 |
+| 测试 | 76 通过 |
 
 ---
 
@@ -40,12 +40,12 @@
 |------|-----|------|
 | 架构清晰度 | 9.0 | `Store → Middleware onion → Reducer → @Observable` 边界清晰；`scope` / `pullback` / `combineReducers` 组合模型克制；零外部依赖，Core 体量可控 |
 | 并发正确性 | 8.5 | `Reducer` / composition / `Middleware` 同属 `@MainActor`；`runTask` 替换等待旧任务完成 + token 防误清。协作取消仍是调用方责任（合理） |
-| API 设计 | 8.8 | `ActionDispatcher` 命名冲突已解；`StoreType` 已统一 `Store` / `ScopedStore` 的 `state`、`dispatch`、`binding` 与 `provideStore` 接口；`TGNavigationStack` 已拆为独立 target 并回发 `NavigationAction`。`ScopedStore` 仍缺 `runTask` 等 root-only 能力说明 |
-| 异步原语 | 8.0 | throttle 名实、runTask 串行替换已可信；timeout / throttle 与 in-flight 重叠仍依赖协作取消，文档与语义可再收紧 |
-| 测试 | 8.8 | 本轮边界有回归覆盖；新增 `binding` KeyPath、导航 `.setPath`、Equatable 无变化跳过通知等测试。`TestStore` 仍用 `fatalError`，与 Swift Testing 报告集成偏弱 |
+| API 设计 | 9.0 | `ActionDispatcher` 命名冲突已解；`StoreType` 已统一 `Store` / `ScopedStore` 的 `state`、`dispatch`、`binding` 与 `provideStore` 接口；`TGNavigationStack` 已拆为独立 target 并回发 `NavigationAction`。root-only async 边界已明确写入 API 注释与文档 |
+| 异步原语 | 8.3 | throttle 名实、runTask 串行替换已可信；root/scoped 责任边界已明确。timeout / throttle 与 in-flight 重叠仍依赖协作取消，语义继续保持克制 |
+| 测试 | 9.1 | 本轮边界有回归覆盖；新增 `binding` KeyPath、导航 `.setPath`、Equatable 无变化跳过通知等测试。`TestStore` 已改为抛出结构化错误，更适合 Swift Testing / XCTest 报告 |
 | Debug / Time Travel | 8.5 | timeline index、`snapshot(at:)`、`initialState`、`maxEntries`、`exportJSON` 坐标系已修稳 |
-| Docs & DX | 7.5 | 质量高，但 `Docs/` 分析报告与指南混放，接入方认知成本偏高 |
-| SwiftUI / Observation | 8.7 | `@Observable` 接入自然；`binding(get: KeyPath, send:)` 已补齐；导航事件已回到 reducer；`Equatable` 无变化可跳过多余通知；`StoreType` 已统一 View 依赖面。剩余问题集中在 root/scoped 异步能力边界和更细粒度产品化打磨 |
+| Docs & DX | 8.4 | 入口已分为接入指南 / 架构分析 / 审阅维护三层，README 只保留分层入口。仍有少量历史分析文档可继续瘦身 |
+| SwiftUI / Observation | 8.9 | `@Observable` 接入自然；`binding(get: KeyPath, send:)` 已补齐；导航事件已回到 reducer；`Equatable` 无变化可跳过多余通知；`StoreType` 已统一 View 依赖面，且 root-only async 边界已明确 |
 
 ---
 
@@ -66,6 +66,9 @@
 11. `Store` / `ScopedStore` 已在 `State: Equatable` 且值不变时跳过多余通知
 12. `TGNavigationStack` 已拆成独立的 `TGReduxKitNavigation` target
 13. `StoreType` 已统一 `Store` / `ScopedStore` 的基础 SwiftUI API 面
+14. root-only async 边界已明确：`runTask` / `debounce` / `throttle` / retry / timeout 不下放到 `ScopedStore`
+15. `TestStore` 已从 `fatalError` 切换为结构化断言错误
+16. `Docs/` 已补入口分层，README 降为目录入口
 
 详见 [`REVIEW_REMEDIATION_REPORT.md`](./REVIEW_REMEDIATION_REPORT.md)。
 
@@ -77,10 +80,8 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 | Priority | Area | 优化项 | 原因 | Effort |
 |----------|------|--------|------|--------|
-| **P2** | Testing | `TestStore` 用 Swift Testing `Issue` / `#expect` 代替 `fatalError` | 失败信息与测试报告集成差，且会中断整个进程 | S |
-| **P2** | Async | `throttle` / `timeout` 协作取消语义文档化或收紧 | 窗口锁与 in-flight 重叠、timeout 竞态依赖协作取消，调用方易误用 | S |
-| **P2** | API surface | 明确 `StoreType` 与 root-only 能力边界 | `ScopedStore` 仍无 `runTask` / debounce 等能力；需要文档明确或继续补齐 | S |
-| **P3** | Docs | `Docs/` 文档面收敛，入口分层 | 分析报告与指南混放，接入方认知成本上升 | M |
+| **P2** | Async | `throttle` / `timeout` 协作取消语义文档化或收紧 | 窗口锁与 in-flight 重叠、timeout 竞态仍依赖协作取消，调用方易误用 | S |
+| **P3** | Docs | 历史分析文档继续瘦身或补“历史基线”标识 | 入口已分层，但少量长文仍保留旧时期上下文 | M |
 
 ---
 
@@ -97,33 +98,31 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 **收益**：列表高频 dispatch、多 scope 场景更稳。
 
-### 2. Root / Scoped 能力边界（P2）
+### 2. Root / Scoped 能力边界（已完成）
 
 **目标**：Feature View 不感知 root / scoped 差异。
 
 **做法建议**：
 
-1. 基于已落地的 `StoreType`，明确哪些能力是所有 store 共享的公共面
-2. 二选一明确产品决策：
-   - **A**：`ScopedStore` 转发 root 的 `runTask` / debounce 等
-   - **B**：文档硬性规定「异步副作用只走 root store」
-3. README / Guides 中显式区分“任何 store 都能做什么”和“只有 root store 能做什么”
+1. 已基于 `StoreType` 明确共享公共面：`state` / `dispatch` / `binding` / `provideStore`
+2. 已明确选择 **B**：文档硬性规定「异步副作用只走 root store」
+3. README / Guides / API 注释中已区分“任何 store 都能做什么”和“只有 root store 能做什么”
 
 **收益**：Demo 与接入方样板代码显著减少。
 
-### 3. 测试与异步语义打磨（P2）
+### 3. 测试与异步语义打磨（进行中）
 
-1. `TestStore.assert` 对齐 Swift Testing（`Issue.record` / `#expect`）
+1. `TestStore.assert` 已切换为抛出结构化错误，并由测试框架接管失败报告
 2. 在 [`ASYNC_RACE_AND_CANCELLATION.md`](./ASYNC_RACE_AND_CANCELLATION.md) 或 API 注释中写清：
    - throttle 是 leading-edge + 窗口锁，不保证与 in-flight 互斥
    - timeout 依赖协作取消；`operation` 内必须检查 `Task.isCancelled`
-3. 按需补 1–2 个边界测试锁定文档语义
+3. 按需继续补 1–2 个边界测试锁定文档语义
 
-### 4. 文档收敛（P3）
+### 4. 文档收敛（首轮已完成）
 
-1. 区分「接入指南」与「内部分析 / review 报告」
-2. README 只链到指南入口；分析类文档保留但降低入口权重
-3. 避免再堆叠与实现重复的长文，优先短链到源码注释
+1. 已区分「接入指南」与「内部分析 / review 报告」
+2. README 已改为三层入口；分析类文档保留但降低入口权重
+3. 后续继续避免堆叠重复长文，优先短链到源码注释
 
 ---
 
@@ -145,7 +144,7 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 | 阶段 | 目标分 | 主要动作 |
 |------|--------|----------|
 | 当前 | 9.0 | 严格并发、导航单向流、Navigation target 拆分、StoreType 统一协议已收口 |
-| 下一跳 | ~9.2 | 完成落地顺序 1–2（观测验证、root/scoped 能力边界） |
+| 下一跳 | ~9.2 | 继续补异步语义边界测试，瘦身历史分析文档 |
 | 再往后 | 9.0+ | P2/P3 打磨；仅在真实瓶颈出现时加深 Observation |
 
 ---
@@ -154,11 +153,11 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 完成对应优先级后，建议至少满足：
 
-- [ ] `swift build` / `swift test` 全绿
+- [x] `swift build` / `swift test` 全绿
 - [x] P0：导航 dismiss / pop 有 action 路径；time-travel 可录到
 - [x] P1：Equatable 无变化不触发多余 `@Observable` 通知（有测试或可复现 Demo）
 - [ ] P1：middleware 管道只 compose 一次（可读性注释或单测可观察）
-- [x] P1：`Store` / `ScopedStore` 对 View 的使用面一致，或文档明确不对称策略
+- [x] P1：`Store` / `ScopedStore` 对 View 的使用面一致，且文档明确 root-only async 策略
 - [ ] `CHANGELOG.md` `[Unreleased]` 已记录行为变更（尤其导航与 API）
 
 ---

@@ -76,6 +76,7 @@ Middleware（同步洋葱）
 
 - Reducer **只处理已确定的 Action**，不启动网络、不持有 Task。
 - Middleware **同步签名、异步内容**：先 `next`，再 `runTask`。
+- `StoreType` 只统一 View 层同步 API；`runTask` / `debounce` / `throttle` / timeout / retry 只属于 root `Store`。
 - 所有 `dispatch` / 状态读写收敛在 `@MainActor`，并发完成的回流会串行化到主线程。
 
 ---
@@ -96,6 +97,7 @@ store.cancelAllTasks()
 - **有 ID**：启动前取消同 ID 旧任务，并登记到 `managedTasks`。
 - **无 ID**：fire-and-forget，不参与取消表。
 - **不同 ID**：互不取消，可并行（例如 `"catalog-search"` 与 `"feature-flags"`）。
+- **ScopedStore**：不暴露这些 API；若某个 Feature 需要异步副作用，应在 root store 的 middleware / 协调层启动，并以 action 回流。
 
 `CancellationID` 是轻量 `Hashable` / `Sendable`，可用字符串字面量：`id: "catalog-search"`。
 

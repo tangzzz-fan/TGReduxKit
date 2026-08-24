@@ -57,34 +57,34 @@ struct TestStoreTests {
     // MARK: - send with expect
 
     @MainActor
-    @Test func testSendExpectPassesForMatchingState() {
+    @Test func testSendExpectPassesForMatchingState() throws {
         let store = TestStore(initialState: TestState(), reducer: reducer)
 
-        store.send(.increment, expect: TestState(count: 1))
-        store.send(.setMessage("Hello"), expect: TestState(count: 1, message: "Hello"))
+        try store.send(.increment, expect: TestState(count: 1))
+        try store.send(.setMessage("Hello"), expect: TestState(count: 1, message: "Hello"))
     }
 
     // MARK: - assert equals
 
     @MainActor
-    @Test func testAssertEqualsPasses() {
+    @Test func testAssertEqualsPasses() throws {
         let store = TestStore(initialState: TestState(), reducer: reducer)
 
         store.send(.increment)
-        store.assert(equals: TestState(count: 1))
+        try store.assert(equals: TestState(count: 1))
 
         store.send(.decrement)
-        store.assert(equals: TestState(count: 0))
+        try store.assert(equals: TestState(count: 0))
     }
 
     @MainActor
-    @Test func testMultiStepFlow() {
+    @Test func testMultiStepFlow() throws {
         let store = TestStore(initialState: TestState(), reducer: reducer)
 
         store.send(.increment)
         store.send(.increment)
         store.send(.setMessage("done"))
-        store.assert { state in
+        try store.assert { state in
             state.count == 2 && state.message == "done"
         }
     }
@@ -92,17 +92,17 @@ struct TestStoreTests {
     // MARK: - assert with predicate
 
     @MainActor
-    @Test func testAssertPredicatePasses() {
+    @Test func testAssertPredicatePasses() throws {
         let store = TestStore(initialState: TestState(), reducer: reducer)
 
         store.send(.increment)
-        store.assert("count should be positive") { state in
+        try store.assert("count should be positive") { state in
             state.count > 0
         }
     }
 
     @MainActor
-    @Test func testAssertPredicatePassesCompoundCondition() {
+    @Test func testAssertPredicatePassesCompoundCondition() throws {
         let store = TestStore(initialState: TestState(), reducer: reducer)
 
         store.send(.addItem("A"))
@@ -110,9 +110,50 @@ struct TestStoreTests {
         store.send(.addItem("C"))
         store.send(.increment)
 
-        store.assert { state in
+        try store.assert { state in
             state.items.count == 3 && state.count == 1
         }
+    }
+
+    @MainActor
+    @Test func testSendExpectThrowsStructuredErrorForMismatch() {
+        let store = TestStore(initialState: TestState(), reducer: reducer)
+
+        var capturedError: TestStoreAssertionError<TestState>?
+
+        do {
+            try store.send(.increment, expect: TestState(count: 2))
+        } catch let error as TestStoreAssertionError<TestState> {
+            capturedError = error
+        } catch {
+            #expect(Bool(false))
+        }
+
+        #expect(capturedError != nil)
+        #expect(capturedError?.expectedState == TestState(count: 2))
+        #expect(capturedError?.currentState == TestState(count: 1))
+        #expect(capturedError?.description.contains("TestStore state mismatch.") == true)
+    }
+
+    @MainActor
+    @Test func testAssertPredicateThrowsStructuredErrorForFailure() {
+        let store = TestStore(initialState: TestState(), reducer: reducer)
+
+        var capturedError: TestStoreAssertionError<TestState>?
+
+        do {
+            try store.assert("count should be positive") { state in
+                state.count > 0
+            }
+        } catch let error as TestStoreAssertionError<TestState> {
+            capturedError = error
+        } catch {
+            #expect(Bool(false))
+        }
+
+        #expect(capturedError != nil)
+        #expect(capturedError?.currentState == TestState())
+        #expect(capturedError?.description.contains("count should be positive") == true)
     }
 
     // MARK: - State history
@@ -173,7 +214,7 @@ struct TestStoreTests {
     // MARK: - Complex scenario
 
     @MainActor
-    @Test func testShoppingCartFlow() {
+    @Test func testShoppingCartFlow() throws {
         struct CartState: Equatable {
             var items: [String] = []
             var total: Int = 0
@@ -199,13 +240,13 @@ struct TestStoreTests {
 
         let store = TestStore(initialState: CartState(), reducer: cartReducer)
 
-        store.send(.addItem("Widget", price: 10), expect: CartState(items: ["Widget"], total: 10))
-        store.send(.addItem("Gadget", price: 20), expect: CartState(items: ["Widget", "Gadget"], total: 30))
+        try store.send(.addItem("Widget", price: 10), expect: CartState(items: ["Widget"], total: 10))
+        try store.send(.addItem("Gadget", price: 20), expect: CartState(items: ["Widget", "Gadget"], total: 30))
         store.send(.removeItem("Widget"))
-        store.assert { state in
+        try store.assert { state in
             state.items == ["Gadget"] && state.total == 30
         }
-        store.send(.clear, expect: CartState())
+        try store.send(.clear, expect: CartState())
 
         let history = store.replayHistory()
         #expect(history.count == 5)  // initial + 4 actions
@@ -214,7 +255,7 @@ struct TestStoreTests {
     // MARK: - Nested enum action patterns
 
     @MainActor
-    @Test func testNestedEnumActionPattern() {
+    @Test func testNestedEnumActionPattern() throws {
         struct ParentState: Equatable {
             var child = ChildState()
         }
@@ -250,9 +291,9 @@ struct TestStoreTests {
         store.send(.child(.setValue(42)))
         #expect(store.state.child.value == 42)
 
-        store.send(.child(.toggle), expect: ParentState(child: ChildState(value: 42, enabled: true)))
+        try store.send(.child(.toggle), expect: ParentState(child: ChildState(value: 42, enabled: true)))
 
         store.send(.child(.setValue(0)))
-        store.send(.child(.toggle), expect: ParentState(child: ChildState(value: 0, enabled: false)))
+        try store.send(.child(.toggle), expect: ParentState(child: ChildState(value: 0, enabled: false)))
     }
 }

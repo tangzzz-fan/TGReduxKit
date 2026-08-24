@@ -84,6 +84,10 @@ public final class Store<State, Action>: StoreType {
         return childStore
     }
 
+    /// Starts an asynchronous task owned by the root store.
+    ///
+    /// `runTask` is intentionally defined only on `Store`, not `StoreType` / `ScopedStore`, so
+    /// cancellable work and latest-wins semantics stay centralized at the root state boundary.
     @discardableResult
     public func runTask(
         id: CancellationID? = nil,

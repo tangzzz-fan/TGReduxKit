@@ -114,7 +114,7 @@ struct CrossFeatureTests {
     // MARK: - Pattern 2: Reducer inline coordination
 
     @MainActor
-    @Test func testReducerInlineCrossFeatureSyncUpdate() {
+    @Test func testReducerInlineCrossFeatureSyncUpdate() throws {
         // This reducer directly updates Feature B when Feature A changes
         let coordinatedReducer: Reducer<AppState, AppAction> = { state, action in
             switch action {
@@ -151,7 +151,7 @@ struct CrossFeatureTests {
         #expect(store.state.recommendations.lastProductID == "Widget")
 
         // Verify full state consistency
-        store.assert { state in
+        try store.assert { state in
             state.catalog.products.count == 1
                 && state.cart.items.count == 1
                 && state.recommendations.lastProductID == "Widget"
@@ -161,7 +161,7 @@ struct CrossFeatureTests {
     // MARK: - Pattern 3: Explicit coordination action
 
     @MainActor
-    @Test func testExplicitCoordinationActionPattern() {
+    @Test func testExplicitCoordinationActionPattern() throws {
         let reducer: Reducer<AppState, AppAction> = { state, action in
             switch action {
             case .catalog(.addProduct(let name)):
@@ -193,7 +193,7 @@ struct CrossFeatureTests {
         store.send(.cartDidUpdate(addedProduct: "Widget"))
 
         // Step 3: Feature B (recommendations) state is updated by the coordination action
-        store.assert(equals: AppState(
+        try store.assert(equals: AppState(
             catalog: CatalogState(),
             cart: CartState(items: ["Widget"]),
             recommendations: RecommendationsState(lastProductID: "Widget", suggestions: [])
@@ -201,7 +201,7 @@ struct CrossFeatureTests {
     }
 
     @MainActor
-    @Test func testExplicitCoordinationActionPreventsAccidentalCrossFeatureAccess() {
+    @Test func testExplicitCoordinationActionPreventsAccidentalCrossFeatureAccess() throws {
         struct FeatureAState: Equatable { var count = 0 }
         struct FeatureBState: Equatable { var message = "" }
 
@@ -242,8 +242,8 @@ struct CrossFeatureTests {
         let store = TestStore(initialState: RootState(), reducer: reducer)
 
         // Feature A can only dispatch its own actions via scoped store
-        store.send(.a(.increment), expect: RootState(featureA: FeatureAState(count: 1)))
-        store.send(.a(.increment), expect: RootState(featureA: FeatureAState(count: 2)))
+        try store.send(.a(.increment), expect: RootState(featureA: FeatureAState(count: 1)))
+        try store.send(.a(.increment), expect: RootState(featureA: FeatureAState(count: 2)))
 
         // Cross-Feature update goes through explicit coordination action
         store.send(.featureADidChange(newCount: 2))

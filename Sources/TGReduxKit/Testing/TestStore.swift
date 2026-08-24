@@ -1,5 +1,37 @@
 import Foundation
 
+/// A structured assertion failure emitted by `TestStore`.
+public struct TestStoreAssertionError<State>: Error, CustomStringConvertible, @unchecked Sendable {
+    public let message: String
+    public let currentState: State
+    public let expectedState: State?
+
+    public init(
+        message: String,
+        currentState: State,
+        expectedState: State? = nil
+    ) {
+        self.message = message
+        self.currentState = currentState
+        self.expectedState = expectedState
+    }
+
+    public var description: String {
+        if let expectedState {
+            return """
+            \(message)
+              Expected: \(expectedState)
+              Actual:   \(currentState)
+            """
+        }
+
+        return """
+        \(message)
+          Current state: \(currentState)
+        """
+    }
+}
+
 /// A test harness for synchronously testing reducer logic.
 ///
 /// `TestStore` provides a lightweight way to verify reducer behavior by dispatching
@@ -9,17 +41,20 @@ import Foundation
 /// ## Usage
 ///
 /// ```swift
-/// @Test func counterFlow() {
+/// @Test func counterFlow() throws {
 ///     let store = TestStore(initialState: CounterState(), reducer: counterReducer)
 ///
 ///     store.send(.increment)
-///     store.assert(equals: CounterState(count: 1))
+///     try store.assert(equals: CounterState(count: 1))
 ///
-///     store.send(.increment, expect: CounterState(count: 2))
+///     try store.send(.increment, expect: CounterState(count: 2))
 ///     store.send(.decrement)
-///     store.assert(equals: CounterState(count: 1))
+///     try store.assert(equals: CounterState(count: 1))
 /// }
 /// ```
+///
+/// Failures are surfaced as `TestStoreAssertionError` so Swift Testing / XCTest can report them
+/// without terminating the whole test process via `fatalError`.
 @MainActor
 public final class TestStore<State: Equatable, Action> {
     /// The current state after all dispatched actions.
@@ -70,9 +105,9 @@ public final class TestStore<State: Equatable, Action> {
         expect expected: State,
         file: StaticString = #file,
         line: UInt = #line
-    ) -> State {
+    ) throws -> State {
         let newState = send(action)
-        assert(equals: expected, file: file, line: line)
+        try assert(equals: expected, file: file, line: line)
         return newState
     }
 
@@ -91,12 +126,14 @@ public final class TestStore<State: Equatable, Action> {
         file: StaticString = #file,
         line: UInt = #line,
         _ predicate: (State) -> Bool
-    ) {
+    ) throws {
         if !predicate(state) {
             let baseMessage = "TestStore assertion failed — state did not satisfy predicate."
             let fullMessage = message.map { "\(baseMessage) \($0)" } ?? baseMessage
-            // Use fatalError in test context to produce a clear failure
-            fatalError("\(fullMessage)\n  Current state: \(state)", file: file, line: line)
+            throw TestStoreAssertionError(
+                message: "\(fullMessage)\n  Source: \(file):\(line)",
+                currentState: state
+            )
         }
     }
 
@@ -112,16 +149,12 @@ public final class TestStore<State: Equatable, Action> {
         equals expected: State,
         file: StaticString = #file,
         line: UInt = #line
-    ) {
+    ) throws {
         if state != expected {
-            fatalError(
-                """
-                TestStore state mismatch.
-                  Expected: \(expected)
-                  Actual:   \(state)
-                """,
-                file: file,
-                line: line
+            throw TestStoreAssertionError(
+                message: "TestStore state mismatch.\n  Source: \(file):\(line)",
+                currentState: state,
+                expectedState: expected
             )
         }
     }

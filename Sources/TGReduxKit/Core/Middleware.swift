@@ -7,8 +7,12 @@ public typealias ActionDispatcher<Action> = @MainActor (Action) -> Void
 ///
 /// Middleware is the recommended place for side effects, such as API calls, logging, or analytics.
 /// Middleware itself runs on the main actor so state reads and action forwarding stay serialized.
-/// Long-running async work should escape via `Task` or `store.runTask(...)`, then re-enter the
-/// state flow by dispatching a follow-up action.
+/// Long-running async work should escape via `Task` or root-`store.runTask(...)`, then re-enter
+/// the state flow by dispatching a follow-up action.
+///
+/// The middleware signature intentionally receives the root `Store`, not `StoreType`, because task
+/// lifecycle helpers (`runTask`, `debounce`, `throttle`, timeout/retry variants) are root-only
+/// capabilities in TGReduxKit.
 ///
 /// - Parameters:
 ///   - store: The store instance (can be used to read state or dispatch new actions).
