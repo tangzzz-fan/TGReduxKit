@@ -1,9 +1,25 @@
 import Foundation
 import Observation
 
+extension Equatable {
+    fileprivate func tgReduxKitEquals(_ other: Any) -> Bool {
+        guard let other = other as? Self else { return false }
+        return self == other
+    }
+}
+
+@MainActor
+func tgReduxKitStateChanged<State>(from oldValue: State, to newValue: State) -> Bool {
+    guard let equatableValue = oldValue as? any Equatable else {
+        return true
+    }
+
+    return !equatableValue.tgReduxKitEquals(newValue)
+}
+
 @MainActor
 @Observable
-public final class Store<State, Action> {
+public final class Store<State, Action>: StoreType {
     public private(set) var state: State
 
     @ObservationIgnored
@@ -11,6 +27,9 @@ public final class Store<State, Action> {
 
     @ObservationIgnored
     private let middlewares: [Middleware<State, Action>]
+
+    @ObservationIgnored
+    private var dispatchFunction: ActionDispatcher<Action>!
 
     @ObservationIgnored
     private var childObservers: [UUID: WeakScopeObserver] = [:]
@@ -26,24 +45,23 @@ public final class Store<State, Action> {
         self.state = initialState
         self.reducer = reducer
         self.middlewares = middlewares
-    }
 
-    public func dispatch(_ action: Action) {
         let initialDispatch: ActionDispatcher<Action> = { [weak self] action in
             guard let self else { return }
 
-            self.reducer(&self.state, action)
-            self.notifyChildObservers()
+            self.applyReducer(action)
         }
 
-        let dispatchFunction = middlewares.reversed().reduce(initialDispatch) { nextDispatch, middleware in
+        self.dispatchFunction = middlewares.reversed().reduce(initialDispatch) { nextDispatch, middleware in
             { [weak self] action in
                 guard let self else { return }
 
                 middleware(self, action, nextDispatch)
             }
         }
+    }
 
+    public func dispatch(_ action: Action) {
         dispatchFunction(action)
     }
 
@@ -137,6 +155,25 @@ public final class Store<State, Action> {
     private func finishTask(id: CancellationID, token: UUID) {
         guard let task = managedTasks[id], task.token == token else { return }
         managedTasks.removeValue(forKey: id)
+    }
+
+    fileprivate func applyReducer(_ action: Action) {
+        let currentState = state
+        guard currentState is any Equatable else {
+            reducer(&state, action)
+            notifyChildObservers()
+            return
+        }
+
+        var nextState = currentState
+        reducer(&nextState, action)
+
+        guard tgReduxKitStateChanged(from: currentState, to: nextState) else {
+            return
+        }
+
+        state = nextState
+        notifyChildObservers()
     }
 }
 

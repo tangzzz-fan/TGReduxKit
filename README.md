@@ -19,8 +19,9 @@ graph TD
 
 - **Store**: `@MainActor` 单一数据源，持有根 State。
 - **ScopedStore**: 面向 Feature 的子 Store，只暴露局部 State 和 Action。
+- **StoreType**: `Store` / `ScopedStore` 共享的最小协议面，统一 `state`、`dispatch` 和 SwiftUI `binding` 接口。
 - **Action**: 描述发生的事件。
-- **Reducer**: 纯函数，`(inout State, Action) -> Void`，负责更新 State。
+- **Reducer**: 主 actor 上的纯函数，`@MainActor (inout State, Action) -> Void`，负责更新 State。
 - **Middleware**: 运行在主线程的同步中间件，用于处理副作用入口。
 - **CancellationID**: 用于取消同类异步任务的轻量标识。
 
@@ -109,6 +110,12 @@ struct ContentView: View {
 }
 ```
 
+如果你使用 SwiftUI 导航适配层 `TGNavigationStack`，请额外导入独立 target：
+
+```swift
+import TGReduxKitNavigation
+```
+
 ## 文档索引
 
 快速开始后，按需查看对应文档：
@@ -122,6 +129,7 @@ struct ContentView: View {
 | [测试指南](Docs/TESTING_GUIDE.md) | 三层测试策略（纯 Reducer / Middleware 单测 / 集成冒烟）、速度对比 |
 | [多 Feature 联动实战](Docs/MULTI_FEATURE_GUIDE.md) | 购物 App + 车载 App 完整场景 |
 | [时间旅行调试](Docs/TIME_TRAVEL_GUIDE.md) | `TimeTravelRecorder` + `TimelineInspector` 使用指南 |
+| `TGReduxKitNavigation` | 单独的 SwiftUI 导航适配 target，提供 `TGNavigationStack`，依赖 `TGReduxKit` 的 `NavigationState` / `NavigationAction` 模型 |
 | [Feature Flag 集成](Docs/FEATURE_FLAG_GUIDE.md) | Demo 中的 Feature Flag 架构设计与落地方案 |
 | [架构与异步流分析](Docs/ASYNC_FLOW_ANALYSIS.md) | 源码架构分析与异步流处理详解 |
 | [异步竞态与任务取消](Docs/ASYNC_RACE_AND_CANCELLATION.md) | 问题 A/B：多个不确定异步答案、latest-wins 与生命周期取消 |

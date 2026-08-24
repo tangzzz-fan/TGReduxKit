@@ -1,32 +1,37 @@
 import SwiftUI
+import TGReduxKit
 
-/// A wrapper around `NavigationStack` that connects to the Redux store.
+/// A wrapper around `NavigationStack` that connects to `NavigationState` and
+/// dispatches `NavigationAction`s back into your reducer pipeline.
 ///
-/// This view manages the synchronization between the `NavigationState` in your Store
-/// and the SwiftUI navigation system.
+/// This target is intentionally separate from the core store module so apps can
+/// adopt TGReduxKit's state model without pulling in the SwiftUI navigation
+/// adapter unless they want it.
 public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: View {
-    @Binding private var state: NavigationState<Route>
+    private let state: NavigationState<Route>
+    private let dispatch: @MainActor (NavigationAction<Route>) -> Void
     private let root: () -> Root
     private let destination: (Route) -> Destination
 
-    /// Initializes the navigation stack with a binding to the navigation state.
-    ///
-    /// - Parameters:
-    ///   - state: A binding to the `NavigationState` in your Redux store.
-    ///   - root: The root view of the navigation stack.
-    ///   - destination: A view builder that produces the destination view for a given route.
     public init(
-        state: Binding<NavigationState<Route>>,
+        state: NavigationState<Route>,
+        dispatch: @escaping @MainActor (NavigationAction<Route>) -> Void,
         @ViewBuilder root: @escaping () -> Root,
         @ViewBuilder destination: @escaping (Route) -> Destination
     ) {
-        self._state = state
+        self.state = state
+        self.dispatch = dispatch
         self.root = root
         self.destination = destination
     }
 
     public var body: some View {
-        NavigationStack(path: $state.path) {
+        NavigationStack(
+            path: Binding(
+                get: { state.path },
+                set: { dispatch(.setPath($0)) }
+            )
+        ) {
             root()
                 .navigationDestination(for: Route.self) { route in
                     destination(route)
@@ -37,8 +42,7 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
                 get: { state.presentationStyle == .sheet ? state.presentedRoute : nil },
                 set: {
                     if $0 == nil {
-                        state.presentedRoute = nil
-                        state.presentationStyle = nil
+                        dispatch(.dismiss)
                     }
                 }
             )
@@ -51,8 +55,7 @@ public struct TGNavigationStack<Route: TGRoute, Root: View, Destination: View>: 
                 get: { state.presentationStyle == .fullScreenCover ? state.presentedRoute : nil },
                 set: {
                     if $0 == nil {
-                        state.presentedRoute = nil
-                        state.presentationStyle = nil
+                        dispatch(.dismiss)
                     }
                 }
             )

@@ -1,5 +1,6 @@
 import SwiftUI
 import TGReduxKit
+import TGReduxKitNavigation
 
 // MARK: - Shopping App Entry
 
@@ -34,10 +35,8 @@ public struct ShoppingAppView: View {
 
     public var body: some View {
         TGNavigationStack(
-            state: Binding(
-                get: { store.state.navigation },
-                set: { _ in }
-            )
+            state: store.state.navigation,
+            dispatch: { store.dispatch(.navigation($0)) }
         ) {
             ProductListView()
                 .provideStore(catalogStore)

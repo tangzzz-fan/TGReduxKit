@@ -11,6 +11,9 @@ public func navigationReducer<Route: TGRoute>(
     action: NavigationAction<Route>
 ) {
     switch action {
+    case .setPath(let path):
+        state.path = path
+
     case .push(let route):
         state.path.append(route)
         

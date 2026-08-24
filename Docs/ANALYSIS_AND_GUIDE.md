@@ -21,17 +21,18 @@
 当前源码中的核心定义是：
 
 ```swift
-public typealias Reducer<State, Action> = (inout State, Action) -> Void
-public typealias Dispatch<Action> = (Action) -> Void
-public typealias Middleware<State, Action> = (Store<State, Action>, Action, @escaping Dispatch<Action>) -> Void
+public typealias Reducer<State, Action> = @MainActor (inout State, Action) -> Void
+public typealias ActionDispatcher<Action> = @MainActor (Action) -> Void
+public typealias Middleware<State, Action> = @MainActor (Store<State, Action>, Action, @escaping ActionDispatcher<Action>) -> Void
 ```
 
 直接结论：
 
-- Reducer 只有 `inout` 变异模型
-- Middleware 是同步函数签名
+- Reducer 是收口到 `@MainActor` 的 `inout` 变异模型
+- Middleware 是 `@MainActor` 上的同步函数签名
 - 异步副作用依赖 middleware 内部手动启动 `Task`
 - Store 基于 `@Observable` 驱动 SwiftUI 刷新
+- `StoreType` 已统一 `Store` / `ScopedStore` 的基础 SwiftUI API 面
 
 ### 2.2 Store 执行模型
 
@@ -104,7 +105,7 @@ TextField(
 - `NavigationState<Route>`
 - `NavigationAction<Route>`
 - `navigationReducer`
-- `TGNavigationStack`
+- `TGNavigationStack`（位于独立 target `TGReduxKitNavigation`）
 
 这说明作者已经把“导航状态化”纳入框架边界。
 

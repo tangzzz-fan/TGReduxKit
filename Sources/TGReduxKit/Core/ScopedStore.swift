@@ -3,7 +3,7 @@ import Observation
 
 @MainActor
 @Observable
-public final class ScopedStore<State, Action>: ScopeObserver {
+public final class ScopedStore<State, Action>: StoreType, ScopeObserver {
     public private(set) var state: State
 
     @ObservationIgnored
@@ -55,7 +55,13 @@ public final class ScopedStore<State, Action>: ScopeObserver {
     }
 
     func refreshStateFromParent() {
-        state = stateProvider()
+        let nextState = stateProvider()
+
+        guard tgReduxKitStateChanged(from: state, to: nextState) else {
+            return
+        }
+
+        state = nextState
         notifyChildObservers()
     }
 

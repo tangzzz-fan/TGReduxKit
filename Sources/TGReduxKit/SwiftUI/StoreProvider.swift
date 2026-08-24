@@ -1,12 +1,13 @@
 import SwiftUI
+import Observation
 
 extension View {
-    /// Injects a Store into the SwiftUI environment.
+    /// Injects a store-like type into the SwiftUI environment.
     ///
-    /// Use this modifier at the root of your view hierarchy to make the Store available
-    /// to all child views via `@Environment`.
+    /// Use this modifier at the root of your view hierarchy to make a `Store`
+    /// or `ScopedStore` available to all child views via `@Environment`.
     ///
-    /// - Parameter store: The `Store` instance to inject.
+    /// - Parameter store: The store instance to inject.
     /// - Returns: A view with the store in its environment.
     ///
     /// ## Usage
@@ -32,11 +33,7 @@ extension View {
     ///     @Environment(Store<AppState, AppAction>.self) var store
     /// }
     /// ```
-    public func provideStore<State, Action>(_ store: Store<State, Action>) -> some View {
-        self.environment(store)
-    }
-
-    public func provideStore<State, Action>(_ store: ScopedStore<State, Action>) -> some View {
+    public func provideStore<S: StoreType>(_ store: S) -> some View {
         self.environment(store)
     }
 }

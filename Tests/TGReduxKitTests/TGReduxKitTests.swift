@@ -1,8 +1,18 @@
 import Testing
 import Foundation
+import SwiftUI
 @testable import TGReduxKit
 
 struct TGReduxKitTests {
+    @MainActor
+    final class CountingScopeObserver: ScopeObserver {
+        private(set) var refreshCount = 0
+
+        func refreshStateFromParent() {
+            refreshCount += 1
+        }
+    }
+
     final class LogCollector: @unchecked Sendable {
         private let lock = NSLock()
         private var storage: [String] = []
@@ -147,6 +157,69 @@ struct TGReduxKitTests {
     }
 
     @MainActor
+    @Test func testKeyPathBindingOnStoreReadsAndDispatches() {
+        struct BindingState: Equatable {
+            var name = ""
+        }
+
+        enum BindingAction: Equatable {
+            case setName(String)
+        }
+
+        let bindingReducer: Reducer<BindingState, BindingAction> = { state, action in
+            switch action {
+            case .setName(let name):
+                state.name = name
+            }
+        }
+
+        let store = Store(initialState: BindingState(), reducer: bindingReducer)
+        let binding = store.binding(get: \.name, send: BindingAction.setName)
+
+        #expect(binding.wrappedValue == "")
+
+        binding.wrappedValue = "Taylor"
+
+        #expect(store.state.name == "Taylor")
+        #expect(binding.wrappedValue == "Taylor")
+    }
+
+    @MainActor
+    @Test func testKeyPathBindingOnScopedStoreReadsAndDispatches() {
+        struct BindingFeatureState: Equatable {
+            var name = ""
+        }
+
+        struct BindingRootState: Equatable {
+            var feature = BindingFeatureState()
+        }
+
+        enum BindingFeatureAction: Equatable {
+            case setName(String)
+        }
+
+        enum BindingRootAction: Equatable {
+            case feature(BindingFeatureAction)
+        }
+
+        let bindingRootReducer: Reducer<BindingRootState, BindingRootAction> = { state, action in
+            switch action {
+            case .feature(.setName(let name)):
+                state.feature.name = name
+            }
+        }
+
+        let store = Store(initialState: BindingRootState(), reducer: bindingRootReducer)
+        let featureStore = store.scope(state: \.feature, action: BindingRootAction.feature)
+        let binding = featureStore.binding(get: \.name, send: BindingFeatureAction.setName)
+
+        binding.wrappedValue = "Scoped"
+
+        #expect(featureStore.state.name == "Scoped")
+        #expect(store.state.feature.name == "Scoped")
+    }
+
+    @MainActor
     @Test func testAsyncActionInMiddleware() async throws {
         let asyncMiddleware: Middleware<TestState, TestAction> = { store, action, next in
             if case .increment = action {
@@ -228,6 +301,69 @@ struct TGReduxKitTests {
 
         #expect(store.state.parent.child.count == 1)
         #expect(childStore.state.count == 1)
+    }
+
+    @MainActor
+    @Test func testEquatableNoOpDispatchDoesNotNotifyChildObservers() {
+        struct StableState: Equatable {
+            var count = 0
+        }
+
+        enum StableAction {
+            case noop
+        }
+
+        let reducer: Reducer<StableState, StableAction> = { _, _ in }
+        let store = Store(initialState: StableState(), reducer: reducer)
+        let observer = CountingScopeObserver()
+
+        _ = store.addChildObserver(observer)
+        store.dispatch(.noop)
+
+        #expect(observer.refreshCount == 0)
+    }
+
+    @MainActor
+    @Test func testNonEquatableNoOpDispatchStillNotifiesChildObservers() {
+        struct NonEquatableState {
+            var count = 0
+        }
+
+        enum StableAction {
+            case noop
+        }
+
+        let reducer: Reducer<NonEquatableState, StableAction> = { _, _ in }
+        let store = Store(initialState: NonEquatableState(), reducer: reducer)
+        let observer = CountingScopeObserver()
+
+        _ = store.addChildObserver(observer)
+        store.dispatch(.noop)
+
+        #expect(observer.refreshCount == 1)
+    }
+
+    @MainActor
+    @Test func testScopedStoreSkipsNoOpRefreshForEquatableState() {
+        struct StableState: Equatable {
+            var count = 0
+        }
+
+        enum StableAction {
+            case noop
+        }
+
+        let store = ScopedStore<StableState, StableAction>(
+            initialState: StableState(),
+            dispatch: { _ in },
+            stateProvider: { StableState() }
+        )
+        let observer = CountingScopeObserver()
+
+        _ = store.addChildObserver(observer)
+        store.refreshStateFromParent()
+
+        #expect(observer.refreshCount == 0)
     }
 
     @MainActor
