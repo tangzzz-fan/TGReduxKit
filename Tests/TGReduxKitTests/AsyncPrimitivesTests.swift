@@ -108,6 +108,37 @@ struct AsyncPrimitivesTests {
         #expect(store.state.items == ["first", "third"])
     }
 
+    @MainActor
+    @Test func testThrottleHoldsLockUntilInFlightOperationFinishes() async throws {
+        let store = Store(initialState: TestState(), reducer: reducer)
+
+        store.throttle(id: "throttle-inflight", milliseconds: 40) {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            guard !Task.isCancelled else { return }
+            await store.dispatch(.appendItem("first"))
+        }
+
+        // Interval has elapsed, but the first operation is still in flight — ignored.
+        try await Task.sleep(nanoseconds: 80_000_000)
+        store.throttle(id: "throttle-inflight", milliseconds: 40) {
+            await store.dispatch(.appendItem("overlap"))
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(store.state.items == [])
+
+        // After in-flight work + lock release, a new leading-edge call is allowed.
+        try await Task.sleep(nanoseconds: 150_000_000)
+        #expect(store.state.items == ["first"])
+
+        store.throttle(id: "throttle-inflight", milliseconds: 40) {
+            await store.dispatch(.appendItem("after"))
+        }
+
+        try await Task.sleep(nanoseconds: 30_000_000)
+        #expect(store.state.items == ["first", "after"])
+    }
+
     // MARK: - Retry
 
     @MainActor
@@ -212,6 +243,55 @@ struct AsyncPrimitivesTests {
         }
 
         try await Task.sleep(nanoseconds: 150_000_000)
+
+        #expect(store.state.count == 1)
+        #expect(store.state.message == "")
+    }
+
+    @MainActor
+    @Test func testTimeoutDoesNotInvokeFallbackWhenOperationWins() async throws {
+        actor FallbackCounter {
+            private var count = 0
+            func increment() { count += 1 }
+            func current() -> Int { count }
+        }
+
+        let counter = FallbackCounter()
+        let store = Store(initialState: TestState(), reducer: reducer)
+
+        store.runTask(
+            id: "timeout-no-fallback",
+            timeoutMs: 200,
+            fallback: {
+                await counter.increment()
+                return .timeoutFallback
+            }
+        ) {
+            try? await Task.sleep(nanoseconds: 20_000_000)
+            await store.dispatch(.increment)
+        }
+
+        try await Task.sleep(nanoseconds: 250_000_000)
+
+        #expect(store.state.count == 1)
+        #expect(store.state.message == "")
+        #expect(await counter.current() == 0)
+    }
+
+    @MainActor
+    @Test func testTimeoutSkippedWhenTimeoutMsIsNonPositive() async throws {
+        let store = Store(initialState: TestState(), reducer: reducer)
+
+        store.runTask(
+            id: "timeout-disabled",
+            timeoutMs: 0,
+            fallback: { .timeoutFallback }
+        ) {
+            try? await Task.sleep(nanoseconds: 30_000_000)
+            await store.dispatch(.increment)
+        }
+
+        try await Task.sleep(nanoseconds: 80_000_000)
 
         #expect(store.state.count == 1)
         #expect(store.state.message == "")

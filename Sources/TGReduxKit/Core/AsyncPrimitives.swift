@@ -89,8 +89,14 @@ extension Store {
     /// Throttles an asynchronous operation so it executes at most once within the specified interval.
     ///
     /// Unlike debounce (which waits for a pause), throttle executes immediately on the first call
-    /// and then ignores subsequent calls until the interval elapses. This is ideal for scroll events
-    /// or rapid button taps where you want the first action to fire right away.
+    /// and then ignores subsequent calls until the throttle lock is released.
+    ///
+    /// The lock lasts until **both** of these complete:
+    /// 1. the leading-edge interval (`milliseconds`)
+    /// 2. the in-flight `operation` started by this call
+    ///
+    /// That keeps leading-edge semantics while preventing a later call from starting overlapping
+    /// work merely because the interval elapsed before a slow operation finished.
     ///
     /// - Parameters:
     ///   - id: A unique identifier for this throttle group.
@@ -128,7 +134,15 @@ extension Store {
         }
 
         runTask(id: lockID, priority: priority) {
-            try? await Task.sleep(nanoseconds: UInt64(milliseconds) * 1_000_000)
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try? await Task.sleep(nanoseconds: UInt64(milliseconds) * 1_000_000)
+                }
+                group.addTask {
+                    await task.value
+                }
+                await group.waitForAll()
+            }
         }
 
         return task
@@ -192,6 +206,11 @@ extension Store {
 
 // MARK: - Timeout
 
+private enum TimeoutRaceResult: Sendable {
+    case completed
+    case timedOut
+}
+
 extension Store where Action: Sendable {
     /// Root-store-only async primitive.
     ///
@@ -199,6 +218,16 @@ extension Store where Action: Sendable {
     /// bookkeeping, so this helper is intentionally unavailable on `ScopedStore` / `StoreType`.
     /// Runs an asynchronous operation with a timeout. If the operation does not complete
     /// within the specified duration, a fallback action is dispatched.
+    ///
+    /// Semantics (intentionally restrained):
+    /// 1. `operation` and the timeout timer race; the first finisher wins.
+    /// 2. The loser is cancelled via structured concurrency (`cancelAll`).
+    /// 3. `fallback` runs **only after** the timeout wins — it is not started in parallel.
+    /// 4. Cancellation remains cooperative: `operation` must still `guard !Task.isCancelled`
+    ///    before its own `dispatch`, or a late write can still land after fallback.
+    ///
+    /// When `timeoutMs <= 0`, the timeout race is skipped and `operation` runs as a normal
+    /// `runTask(id:)`.
     ///
     /// - Parameters:
     ///   - id: A unique identifier for this task.
@@ -224,28 +253,42 @@ extension Store where Action: Sendable {
         priority: TaskPriority? = nil,
         operation: @escaping @Sendable () async -> Void
     ) -> Task<Void, Never> {
+        guard timeoutMs > 0 else {
+            return runTask(id: id, priority: priority) {
+                await operation()
+            }
+        }
+
         let store = self
         return runTask(id: id, priority: priority) {
-            await withTaskGroup(of: Optional<Action>.self) { group in
+            let winner: TimeoutRaceResult = await withTaskGroup(of: TimeoutRaceResult.self) { group in
                 group.addTask {
                     await operation()
-                    return nil
+                    return .completed
                 }
 
                 group.addTask {
-                    try? await Task.sleep(nanoseconds: UInt64(timeoutMs) * 1_000_000)
-
-                    guard !Task.isCancelled else { return nil }
-
-                    let action = await fallback()
-                    return action
+                    do {
+                        try await Task.sleep(nanoseconds: UInt64(timeoutMs) * 1_000_000)
+                        return .timedOut
+                    } catch {
+                        // Sleep was cancelled because the operation finished first (or the
+                        // outer task was cancelled). Do not treat that as a timeout win.
+                        return .completed
+                    }
                 }
 
-                if let timeoutAction = await group.next(), let action = timeoutAction {
-                    group.cancelAll()
-                    await store.dispatch(action)
-                }
+                let first = await group.next() ?? .completed
+                group.cancelAll()
+                await group.waitForAll()
+                return first
             }
+
+            guard winner == .timedOut, !Task.isCancelled else { return }
+
+            let action = await fallback()
+            guard !Task.isCancelled else { return }
+            await store.dispatch(action)
         }
     }
 }

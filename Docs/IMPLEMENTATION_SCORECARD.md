@@ -41,7 +41,7 @@
 | 架构清晰度 | 9.0 | `Store → Middleware onion → Reducer → @Observable` 边界清晰；`scope` / `pullback` / `combineReducers` 组合模型克制；零外部依赖，Core 体量可控 |
 | 并发正确性 | 8.5 | `Reducer` / composition / `Middleware` 同属 `@MainActor`；`runTask` 替换等待旧任务完成 + token 防误清。协作取消仍是调用方责任（合理） |
 | API 设计 | 9.0 | `ActionDispatcher` 命名冲突已解；`StoreType` 已统一 `Store` / `ScopedStore` 的 `state`、`dispatch`、`binding` 与 `provideStore` 接口；导航状态模型与 `TGNavigationStack` 已迁移到独立仓库。root-only async 边界已明确写入 API 注释与文档 |
-| 异步原语 | 8.3 | throttle 名实、runTask 串行替换已可信；root/scoped 责任边界已明确。timeout / throttle 与 in-flight 重叠仍依赖协作取消，语义继续保持克制 |
+| 异步原语 | 8.7 | throttle 名实、runTask 串行替换、root/scoped 边界已明确；throttle 锁覆盖窗口∪in-flight；timeout 仅在超时胜出后调用 fallback。写入层仍依赖协作取消（刻意克制） |
 | 测试 | 9.1 | 本轮边界有回归覆盖；新增 `binding` KeyPath、导航 `.setPath`、Equatable 无变化跳过通知等测试。`TestStore` 已改为抛出结构化错误，更适合 Swift Testing / XCTest 报告 |
 | Debug / Time Travel | 8.5 | timeline index、`snapshot(at:)`、`initialState`、`maxEntries`、`exportJSON` 坐标系已修稳 |
 | Docs & DX | 8.4 | 入口已分为接入指南 / 架构分析 / 审阅维护三层，README 只保留分层入口。仍有少量历史分析文档可继续瘦身 |
@@ -69,6 +69,8 @@
 14. root-only async 边界已明确：`runTask` / `debounce` / `throttle` / retry / timeout 不下放到 `ScopedStore`
 15. `TestStore` 已从 `fatalError` 切换为结构化断言错误
 16. `Docs/` 已补入口分层，README 降为目录入口
+17. `throttle` 锁覆盖节流窗口与 in-flight operation，避免窗口过后叠加工
+18. `timeout` 仅在超时竞速获胜后调用 `fallback`；协作取消仍为写入层约定
 
 详见 [`REVIEW_REMEDIATION_REPORT.md`](./REVIEW_REMEDIATION_REPORT.md)。
 
@@ -80,20 +82,19 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 | Priority | Area | 优化项 | 原因 | Effort |
 |----------|------|--------|------|--------|
-| **P2** | Async | `throttle` / `timeout` 协作取消语义文档化或收紧 | 窗口锁与 in-flight 重叠、timeout 竞态仍依赖协作取消，调用方易误用 | S |
 | **P3** | Docs | 历史分析文档继续瘦身或补“历史基线”标识 | 入口已分层，但少量长文仍保留旧时期上下文 | M |
 
 ---
 
 ## 建议落地顺序
 
-### 1. 观测与热路径验证（P1）
+### 1. 观测与热路径验证（可选）
 
 **目标**：减少无意义重绘与每次 dispatch 的分配。
 
 **做法建议**：
 
-1. 当 `State: Equatable` 时，仅在新值 `!=` 旧值时赋值（含 `ScopedStore.refreshStateFromParent`）
+1. 当 `State: Equatable` 时，仅在新值 `!=` 旧值时赋值（含 `ScopedStore.refreshStateFromParent`）——库层已支持
 2. 如有需要，用基准或 Demo 列表滚动场景验证重绘次数
 
 **收益**：列表高频 dispatch、多 scope 场景更稳。
@@ -110,13 +111,13 @@ Effort：`S` &lt; 半天，`M` ≈ 1–2 天。
 
 **收益**：Demo 与接入方样板代码显著减少。
 
-### 3. 测试与异步语义打磨（进行中）
+### 3. 测试与异步语义打磨（已完成）
 
 1. `TestStore.assert` 已切换为抛出结构化错误，并由测试框架接管失败报告
-2. 在 [`ASYNC_RACE_AND_CANCELLATION.md`](./ASYNC_RACE_AND_CANCELLATION.md) 或 API 注释中写清：
-   - throttle 是 leading-edge + 窗口锁，不保证与 in-flight 互斥
-   - timeout 依赖协作取消；`operation` 内必须检查 `Task.isCancelled`
-3. 按需继续补 1–2 个边界测试锁定文档语义
+2. [`ASYNC_RACE_AND_CANCELLATION.md`](./ASYNC_RACE_AND_CANCELLATION.md) 已写清：
+   - throttle = leading-edge +（窗口 ∪ in-flight）锁
+   - timeout = 先竞速再 fallback；`operation` 内必须检查 `Task.isCancelled`
+3. 已补边界测试锁定上述语义
 
 ### 4. 文档收敛（首轮已完成）
 

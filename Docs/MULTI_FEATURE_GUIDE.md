@@ -233,7 +233,7 @@ store.throttle(id: "volume-wheel", milliseconds: 200) {
 }
 ```
 
-和 debounce 的区别：throttle 立即执行第一次，然后忽略间隔内的后续调用。用户转动滚轮时，第一格立刻生效，后续在 200ms 内只取最后一次。
+和 debounce 的区别：throttle 立即执行第一次，然后在「窗口结束且本次操作完成」之前忽略同 ID 后续调用。用户转动滚轮时，第一格立刻生效，不会在慢操作未完成时叠加工。
 
 ### 2.2 retry + timeout：导航路线请求
 
