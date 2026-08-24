@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Docs**: 新增 `Docs/ASYNC_RACE_AND_CANCELLATION.md`，细化异步竞态（问题 A）与任务生命周期取消（问题 B）。
 - **Docs**: 新增 `Docs/WHY_REDUX_ADOPTION.md`，说明为何转向轻量 Redux、设计优势与团队内采纳路径。
 
+### Changed
+- **Core / Strict Concurrency**: `Reducer` 正式收口到 `@MainActor`，与 `Store`、`Middleware` 对齐为 Swift 6+ 严格并发优先模型。
+  - `combineReducers(_:)`、`pullback(_:state:extract:)` 和 `navigationReducer` 同步标注为 `@MainActor`。
+  - `pullback` 的 `extract` 闭包也同步收口到 `@MainActor`，避免在组合 reducer 时触发 Swift 6 数据竞争诊断。
+  - 仓库内测试与 Demo 的 reducer 声明统一改为 `Reducer<...>`，不再继续使用裸 `(inout State, Action) -> Void` 类型。
+- **Core / API Naming**: 将公开的 `Dispatch<Action>` 重命名为 `ActionDispatcher<Action>`，避免与系统 `Dispatch` 模块命名冲突。
+- **Documentation**: 更新 `Reducer` / `Middleware` 注释与示例，明确主 actor 边界与异步副作用回流方式。
+
+### Fixed
+- **Async Primitives / Throttle**: 修复 `throttle(id:milliseconds:operation:)` 实际未执行节流的问题。
+  - 现在同一窗口内的重复调用会被忽略，窗口结束后才允许下一次触发。
+- **Core / Task Lifecycle**: 修复 `runTask(id:)` 在同 ID 替换时旧任务与新任务可能重叠运行的问题。
+  - 新任务会等待被取消的旧任务完成清理后再开始。
+  - 直接取消返回的 `Task` 句柄时，也会同步清理内部 `managedTasks` 条目。
+- **Core / Observer Propagation**: 修复父/子 store 在通知 scoped observers 时的重入覆盖问题，改为基于快照遍历并清理失效 observer。
+- **Core / Scope Lifecycle**: 修复 `scope(state:action:)` 在父 store 生命周期结束后通过 `fatalError` 崩溃的问题，改为由 scoped store 持有稳定状态来源。
+- **Debug / Time Travel**: 修复 `TimeTravelRecorder` 多项边界行为。
+  - `maxEntries` 裁剪后 `index` 现在保持全局单调递增，避免 SwiftUI `ForEach` identity 冲突。
+  - `snapshot(at:)` 改为按逻辑 timeline index 读取，而非数组位置。
+  - `initialState` 独立保存，不再依赖当前 entries 的首项。
+  - `maxEntries` 对负值输入会钳制并立即裁剪。
+  - `exportJSON()` 现在会传播 action 编码失败，而不是静默降级。
+- **Tests**: 新增回归测试，覆盖 throttle 窗口行为、task 串行化与句柄取消清理、time-travel 裁剪/index/导出失败等边界场景。
+
 ## [2.0.0] - 2026-07-03
 
 ### Added

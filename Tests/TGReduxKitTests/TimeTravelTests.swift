@@ -14,7 +14,7 @@ struct TimeTravelTests {
         case setMessage(String)
     }
 
-    let reducer: (inout TestState, TestAction) -> Void = { state, action in
+    let reducer: Reducer<TestState, TestAction> = { state, action in
         switch action {
         case .increment:
             state.count += 1
@@ -174,6 +174,28 @@ struct TimeTravelTests {
         #expect(recorder.entries.count == 2)
         #expect(recorder.entries.first?.action == .setMessage("a"))
         #expect(recorder.entries.last?.action == .decrement)
+        #expect(recorder.entries.map(\.index) == [1, 2])
+        #expect(recorder.snapshot(at: 0)?.count == nil)
+        #expect(recorder.snapshot(at: 1)?.message == "a")
+        #expect(recorder.snapshot(at: 2)?.count == 0)
+        #expect(recorder.initialState?.count == 0)
+    }
+
+    @MainActor
+    @Test func testNegativeMaxEntriesClampsToZero() {
+        let recorder = TimeTravelRecorder<TestState, TestAction>()
+        let store = Store(
+            initialState: TestState(),
+            reducer: reducer,
+            middlewares: [timeTravelMiddleware(recorder: recorder)]
+        )
+
+        store.dispatch(.increment)
+        recorder.maxEntries = -1
+
+        #expect(recorder.maxEntries == 0)
+        #expect(recorder.entries.isEmpty)
+        #expect(recorder.initialState?.count == 0)
     }
 
     // MARK: - Clear
@@ -193,6 +215,8 @@ struct TimeTravelTests {
 
         recorder.clear()
         #expect(recorder.entries.isEmpty)
+        #expect(recorder.initialState == nil)
+        #expect(recorder.snapshot(at: 0) == nil)
     }
 
     // MARK: - JSON export
@@ -230,6 +254,36 @@ struct TimeTravelTests {
         // Verify it's valid JSON
         let obj = try JSONSerialization.jsonObject(with: json) as? [Any]
         #expect(obj?.count == 3)
+    }
+
+    @MainActor
+    @Test func testExportJSONThrowsWhenActionEncodingFails() {
+        struct BrokenState: Equatable, Codable, Sendable {
+            var value: Int = 0
+        }
+
+        struct BrokenAction: Equatable, Encodable, Sendable {
+            func encode(to encoder: any Encoder) throws {
+                struct ExportFailure: Error {}
+                throw ExportFailure()
+            }
+        }
+
+        let recorder = TimeTravelRecorder<BrokenState, BrokenAction>()
+        let store = Store(
+            initialState: BrokenState(),
+            reducer: { _, _ in },
+            middlewares: [timeTravelMiddleware(recorder: recorder)]
+        )
+
+        store.dispatch(BrokenAction())
+
+        do {
+            _ = try recorder.exportJSON()
+            Issue.record("Expected exportJSON() to propagate action encoding failures.")
+        } catch {
+            _ = Bool(true)
+        }
     }
 
     // MARK: - Cross-feature recording

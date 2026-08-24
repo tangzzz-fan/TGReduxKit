@@ -104,13 +104,22 @@ extension Store {
         priority: TaskPriority? = nil,
         operation: @escaping @Sendable () async -> Void
     ) -> Task<Void, Never> {
+        guard milliseconds > 0 else {
+            return runTask(id: id, priority: priority) {
+                await operation()
+            }
+        }
+
+        let lockID = CancellationID(id.rawValue + ".throttle-lock")
+        guard !hasManagedTask(id: lockID) else {
+            return Task {}
+        }
+
         let task = runTask(id: id, priority: priority) {
             await operation()
         }
 
-        guard milliseconds > 0 else { return task }
-
-        runTask(id: CancellationID(id.rawValue + ".throttle-lock"), priority: priority) {
+        runTask(id: lockID, priority: priority) {
             try? await Task.sleep(nanoseconds: UInt64(milliseconds) * 1_000_000)
         }
 

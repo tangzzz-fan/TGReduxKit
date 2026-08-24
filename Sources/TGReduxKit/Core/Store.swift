@@ -29,7 +29,7 @@ public final class Store<State, Action> {
     }
 
     public func dispatch(_ action: Action) {
-        let initialDispatch: Dispatch<Action> = { [weak self] action in
+        let initialDispatch: ActionDispatcher<Action> = { [weak self] action in
             guard let self else { return }
 
             self.reducer(&self.state, action)
@@ -56,16 +56,12 @@ public final class Store<State, Action> {
             dispatch: { [weak self] childAction in
                 self?.dispatch(actionTransform(childAction))
             },
-            stateProvider: { [weak self] in
-                guard let self else {
-                    fatalError("Store scope accessed after deallocation")
-                }
-
+            stateProvider: {
                 return self.state[keyPath: keyPath]
             }
         )
 
-        addChildObserver(childStore)
+        _ = addChildObserver(childStore)
 
         return childStore
     }
@@ -76,16 +72,26 @@ public final class Store<State, Action> {
         priority: TaskPriority? = nil,
         operation: @escaping @Sendable () async -> Void
     ) -> Task<Void, Never> {
+        let previousTask = id.flatMap { managedTasks[$0]?.task }
         if let id {
             cancelTask(id: id)
         }
 
         let token = UUID()
         let task = Task(priority: priority) { [weak self] in
+            if let previousTask {
+                await previousTask.value
+            }
+
+            guard !Task.isCancelled else {
+                guard let self, let id else { return }
+                self.finishTask(id: id, token: token)
+                return
+            }
             await operation()
 
             guard let self, let id else { return }
-            await self.finishTask(id: id, token: token)
+            self.finishTask(id: id, token: token)
         }
 
         if let id {
@@ -106,6 +112,10 @@ public final class Store<State, Action> {
         tasks.forEach { $0.cancel() }
     }
 
+    internal func hasManagedTask(id: CancellationID) -> Bool {
+        managedTasks[id] != nil
+    }
+
     internal func addChildObserver(_ observer: any ScopeObserver) -> UUID {
         let id = UUID()
         childObservers[id] = WeakScopeObserver(observer)
@@ -113,9 +123,13 @@ public final class Store<State, Action> {
     }
 
     private func notifyChildObservers() {
-        childObservers = childObservers.reduce(into: [:]) { partialResult, entry in
-            guard let observer = entry.value.value else { return }
-            partialResult[entry.key] = WeakScopeObserver(observer)
+        let observerSnapshot = childObservers
+        for entry in observerSnapshot {
+            guard let observer = entry.value.value else {
+                childObservers.removeValue(forKey: entry.key)
+                continue
+            }
+
             observer.refreshStateFromParent()
         }
     }

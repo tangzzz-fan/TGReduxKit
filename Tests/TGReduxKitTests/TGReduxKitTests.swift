@@ -51,7 +51,7 @@ struct TGReduxKitTests {
         case toggle(Bool)
     }
 
-    let reducer: (inout TestState, TestAction) -> Void = { state, action in
+    let reducer: Reducer<TestState, TestAction> = { state, action in
         switch action {
         case .increment:
             state.count += 1
@@ -62,7 +62,7 @@ struct TGReduxKitTests {
         }
     }
 
-    let rootReducer: (inout RootState, RootAction) -> Void = { state, action in
+    let rootReducer: Reducer<RootState, RootAction> = { state, action in
         switch action {
         case .feature(let featureAction):
             switch featureAction {
@@ -152,7 +152,7 @@ struct TGReduxKitTests {
             if case .increment = action {
                 Task {
                     try? await Task.sleep(nanoseconds: 100_000_000)
-                    await store.dispatch(.setMessage("Async Done"))
+                    store.dispatch(.setMessage("Async Done"))
                 }
             }
             next(action)
@@ -205,7 +205,7 @@ struct TGReduxKitTests {
             case child(FeatureAction)
         }
 
-        let nestedReducer: (inout NestedRootState, NestedRootAction) -> Void = { state, action in
+        let nestedReducer: Reducer<NestedRootState, NestedRootAction> = { state, action in
             switch action {
             case .parent(let parentAction):
                 switch parentAction {
@@ -240,7 +240,7 @@ struct TGReduxKitTests {
             case append(String)
         }
 
-        let taskReducer: (inout TaskState, TaskAction) -> Void = { state, action in
+        let taskReducer: Reducer<TaskState, TaskAction> = { state, action in
             switch action {
             case .append(let value):
                 state.values.append(value)
@@ -265,6 +265,87 @@ struct TGReduxKitTests {
 
         try await Task.sleep(nanoseconds: 300_000_000)
         #expect(store.state.values == ["second"])
+    }
+
+    @MainActor
+    @Test func testRunTaskWaitsForCancelledTaskToFinishBeforeReplacement() async throws {
+        struct TaskState: Equatable {
+            var values: [String] = []
+        }
+
+        enum TaskAction: Equatable {
+            case append(String)
+        }
+
+        actor TaskLog {
+            var events: [String] = []
+
+            func append(_ event: String) {
+                events.append(event)
+            }
+
+            func snapshot() -> [String] {
+                events
+            }
+        }
+
+        let taskReducer: Reducer<TaskState, TaskAction> = { state, action in
+            switch action {
+            case .append(let value):
+                state.values.append(value)
+            }
+        }
+
+        let log = TaskLog()
+        let store = Store(initialState: TaskState(), reducer: taskReducer)
+
+        store.runTask(id: "serialize") { [store] in
+            await log.append("first-start")
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            await log.append("first-end")
+            await store.dispatch(.append("first"))
+        }
+
+        try? await Task.sleep(nanoseconds: 10_000_000)
+
+        store.runTask(id: "serialize") { [store] in
+            await log.append("second-start")
+            await store.dispatch(.append("second"))
+        }
+
+        try await Task.sleep(nanoseconds: 250_000_000)
+
+        #expect(await log.snapshot() == ["first-start", "first-end", "second-start"])
+        #expect(store.state.values == ["first", "second"])
+    }
+
+    @MainActor
+    @Test func testCancellingReturnedTaskCleansUpManagedEntry() async throws {
+        struct TaskState: Equatable {
+            var values: [String] = []
+        }
+
+        enum TaskAction: Equatable {
+            case append(String)
+        }
+
+        let taskReducer: Reducer<TaskState, TaskAction> = { state, action in
+            switch action {
+            case .append(let value):
+                state.values.append(value)
+            }
+        }
+
+        let store = Store(initialState: TaskState(), reducer: taskReducer)
+
+        let task = store.runTask(id: "cancel-handle") {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+
+        task.cancel()
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        #expect(!store.hasManagedTask(id: "cancel-handle"))
     }
 
     @MainActor

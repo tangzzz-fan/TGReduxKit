@@ -1,11 +1,14 @@
 import Foundation
 
 /// A function used to dispatch an action.
-public typealias Dispatch<Action> = @MainActor (Action) -> Void
+public typealias ActionDispatcher<Action> = @MainActor (Action) -> Void
 
 /// A function that intercepts actions before they reach the reducer.
 ///
 /// Middleware is the recommended place for side effects, such as API calls, logging, or analytics.
+/// Middleware itself runs on the main actor so state reads and action forwarding stay serialized.
+/// Long-running async work should escape via `Task` or `store.runTask(...)`, then re-enter the
+/// state flow by dispatching a follow-up action.
 ///
 /// - Parameters:
 ///   - store: The store instance (can be used to read state or dispatch new actions).
@@ -29,13 +32,11 @@ public typealias Dispatch<Action> = @MainActor (Action) -> Void
 ///     next(action) // Update state first if needed
 ///
 ///     if case .fetchUser = action {
-///         Task {
+///         store.runTask(id: "fetch-user") {
 ///             let user = await fetchUserFromAPI()
-///             await MainActor.run {
-///                 store.dispatch(.userLoaded(user))
-///             }
+///             await store.dispatch(.userLoaded(user))
 ///         }
 ///     }
 /// }
 /// ```
-public typealias Middleware<State, Action> = @MainActor (Store<State, Action>, Action, @escaping Dispatch<Action>) -> Void
+public typealias Middleware<State, Action> = @MainActor (Store<State, Action>, Action, @escaping ActionDispatcher<Action>) -> Void

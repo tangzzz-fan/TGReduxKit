@@ -16,7 +16,7 @@ struct AsyncPrimitivesTests {
         case timeoutFallback
     }
 
-    let reducer: (inout TestState, TestAction) -> Void = { state, action in
+    let reducer: Reducer<TestState, TestAction> = { state, action in
         switch action {
         case .increment:
             state.count += 1
@@ -81,6 +81,31 @@ struct AsyncPrimitivesTests {
         // Immediate execution
         try await Task.sleep(nanoseconds: 10_000_000)
         #expect(store.state.count == 1)
+    }
+
+    @MainActor
+    @Test func testThrottleIgnoresCallsWithinWindow() async throws {
+        let store = Store(initialState: TestState(), reducer: reducer)
+
+        store.throttle(id: "throttle-window", milliseconds: 200) {
+            await store.dispatch(.appendItem("first"))
+        }
+
+        store.throttle(id: "throttle-window", milliseconds: 200) {
+            await store.dispatch(.appendItem("second"))
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(store.state.items == ["first"])
+
+        try await Task.sleep(nanoseconds: 220_000_000)
+
+        store.throttle(id: "throttle-window", milliseconds: 200) {
+            await store.dispatch(.appendItem("third"))
+        }
+
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(store.state.items == ["first", "third"])
     }
 
     // MARK: - Retry

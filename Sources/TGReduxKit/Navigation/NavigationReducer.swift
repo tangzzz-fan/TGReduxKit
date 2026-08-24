@@ -5,6 +5,7 @@ import Foundation
 /// - Parameters:
 ///   - state: The navigation state to update.
 ///   - action: The navigation action to perform.
+@MainActor
 public func navigationReducer<Route: TGRoute>(
     state: inout NavigationState<Route>,
     action: NavigationAction<Route>
