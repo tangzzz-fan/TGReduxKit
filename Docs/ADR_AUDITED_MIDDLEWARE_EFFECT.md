@@ -20,6 +20,10 @@ Accepted on `feat/audited-middleware-effect-architecture`.
 - `ScopedStore` syncs via `stateProvider()` in `init`
 - Tests use **Swift Testing** (`import Testing`), not XCTest
 
+### Dependency injection
+
+No DI container. See `Docs/DEPENDENCY_INJECTION.md` and Demo `ShoppingDependencies` + middleware factories.
+
 ### Note
 
 SwiftUI’s `@State` conflicts with protocol `State` — qualify as `@SwiftUI.State` at call sites.

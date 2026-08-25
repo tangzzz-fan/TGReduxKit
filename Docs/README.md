@@ -6,6 +6,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md) | 闭包/工厂注入（无 DI 容器）；Demo 对照 |
 | [ADR_AUDITED_MIDDLEWARE_EFFECT.md](./ADR_AUDITED_MIDDLEWARE_EFFECT.md) | **现行** 纯 Reducer + Middleware→Effect |
 | [ADR_INDUSTRIAL_COMPROMISE.md](./ADR_INDUSTRIAL_COMPROMISE.md) | 先前 MainActor Store + Reducer→Effect 草案 |
 | [MIGRATION_4_TO_5.md](./MIGRATION_4_TO_5.md) | 4.x → 5.0 迁移 |

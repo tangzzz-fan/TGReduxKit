@@ -1,9 +1,22 @@
 import Foundation
 import TGReduxKit
 
-/// Live service closures captured by middleware factories.
-public enum ShoppingServices {
-    public static let searchProducts: @Sendable (String, [Product]) async -> [Product] = { query, products in
+// MARK: - Protocols (Sendable — safe to capture in Middleware / Effect)
+
+public protocol ProductSearching: Sendable {
+    func searchProducts(query: String, in products: [Product]) async -> [Product]
+}
+
+public protocol FeatureFlagFetching: Sendable {
+    func fetchSnapshot() async -> FeatureFlagSnapshot
+}
+
+// MARK: - Live implementations
+
+public struct LiveProductSearchService: ProductSearching {
+    public init() {}
+
+    public func searchProducts(query: String, in products: [Product]) async -> [Product] {
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else { return products }
         return products.filter { product in
@@ -11,21 +24,14 @@ public enum ShoppingServices {
                 || product.description.localizedCaseInsensitiveContains(normalizedQuery)
         }
     }
-
-    public static let fetchFeatureFlags: @Sendable () async -> FeatureFlagSnapshot = {
-        await FeatureFlagVariants.next()
-    }
 }
 
-private actor FeatureFlagVariants {
-    private static let shared = FeatureFlagVariants()
+public actor LiveFeatureFlagService: FeatureFlagFetching {
     private var nextVariantIndex = 0
 
-    static func next() async -> FeatureFlagSnapshot {
-        await shared.fetch()
-    }
+    public init() {}
 
-    private func fetch() async -> FeatureFlagSnapshot {
+    public func fetchSnapshot() async -> FeatureFlagSnapshot {
         let variants = [
             FeatureFlagSnapshot(
                 isExpressCheckoutEnabled: false,
@@ -45,6 +51,27 @@ private actor FeatureFlagVariants {
         try? await Task.sleep(for: .milliseconds(500))
         return snapshot
     }
+}
+
+// MARK: - Composition bag (values only — not a DI container)
+
+/// Dependencies assembled at the Composition Root and passed into middleware factories.
+public struct ShoppingDependencies: Sendable {
+    public var productSearch: any ProductSearching
+    public var featureFlags: any FeatureFlagFetching
+    public var now: @Sendable () -> Date
+
+    public init(
+        productSearch: any ProductSearching = LiveProductSearchService(),
+        featureFlags: any FeatureFlagFetching = LiveFeatureFlagService(),
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
+        self.productSearch = productSearch
+        self.featureFlags = featureFlags
+        self.now = now
+    }
+
+    public static let live = ShoppingDependencies()
 }
 
 public enum ShoppingEffectID {

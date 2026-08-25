@@ -244,4 +244,45 @@ struct MiddlewareStructureTests {
         }
         #expect(!box.logs.isEmpty)
     }
+
+    @Test
+    func factoryInjectedMockIsUsedByEffect() async {
+        struct Flags: Equatable, Sendable {
+            var premiumOnly: Bool
+        }
+        struct FlagState: Equatable, Sendable, State {
+            var flags = Flags(premiumOnly: false)
+        }
+        enum FlagAction: Equatable, Sendable, Action {
+            case load
+            case loaded(Flags)
+        }
+
+        struct MockClient: Sendable {
+            let flags: Flags
+            func fetch() async -> Flags { flags }
+        }
+
+        let reducer: Reducer<FlagState, FlagAction> = { state, action in
+            if case .loaded(let flags) = action {
+                state.flags = flags
+            }
+        }
+
+        // Factory-style capture — same pattern as makeFeatureFlagsMiddleware(deps)
+        let client = MockClient(flags: Flags(premiumOnly: true))
+        let middleware: Middleware<FlagState, FlagAction> = { _, action, next in
+            let base = next(action)
+            guard case .load = action else { return base }
+            return .merge(
+                base,
+                .task { .loaded(await client.fetch()) }
+            )
+        }
+
+        let store = Store(initialState: FlagState(), reducer: reducer, middlewares: [middleware])
+        store.dispatch(.load)
+        try? await Task.sleep(for: .milliseconds(20))
+        #expect(store.state.flags.premiumOnly == true)
+    }
 }
