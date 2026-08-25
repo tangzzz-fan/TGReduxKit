@@ -115,21 +115,23 @@ private let crossCuttingReducer: Reducer<ShoppingState, ShoppingAction> = { stat
     }
 }
 
-// MARK: - Middleware (Effects)
+// MARK: - Middleware factories (DI at the door — capture deps, never inject into Store/Reducer)
 
+/// Composition helper: build the middleware stack from explicit dependencies.
 public func makeShoppingMiddlewares(
-    searchProducts: @escaping @Sendable (String, [Product]) async -> [Product] = ShoppingServices.searchProducts,
-    fetchFeatureFlags: @escaping @Sendable () async -> FeatureFlagSnapshot = ShoppingServices.fetchFeatureFlags,
-    now: @escaping @Sendable () -> Date = { Date() }
+    dependencies: ShoppingDependencies = .live
 ) -> [Middleware<ShoppingState, ShoppingAction>] {
     [
-        makeCatalogSearchMiddleware(searchProducts: searchProducts),
-        makeFeatureFlagsMiddleware(fetchFeatureFlags: fetchFeatureFlags, now: now)
+        makeCatalogSearchMiddleware(productSearch: dependencies.productSearch),
+        makeFeatureFlagsMiddleware(
+            featureFlags: dependencies.featureFlags,
+            now: dependencies.now
+        )
     ]
 }
 
-private func makeCatalogSearchMiddleware(
-    searchProducts: @escaping @Sendable (String, [Product]) async -> [Product]
+public func makeCatalogSearchMiddleware(
+    productSearch: any ProductSearching
 ) -> Middleware<ShoppingState, ShoppingAction> {
     { store, action, next in
         let base = next(action)
@@ -140,15 +142,15 @@ private func makeCatalogSearchMiddleware(
         return .merge(
             base,
             .debounce(id: ShoppingEffectID.catalogSearch, delay: .milliseconds(300)) {
-                let results = await searchProducts(query, products)
+                let results = await productSearch.searchProducts(query: query, in: products)
                 return .catalog(.searchCompleted(query, results))
             }
         )
     }
 }
 
-private func makeFeatureFlagsMiddleware(
-    fetchFeatureFlags: @escaping @Sendable () async -> FeatureFlagSnapshot,
+public func makeFeatureFlagsMiddleware(
+    featureFlags: any FeatureFlagFetching,
     now: @escaping @Sendable () -> Date
 ) -> Middleware<ShoppingState, ShoppingAction> {
     { _, action, next in
@@ -159,7 +161,7 @@ private func makeFeatureFlagsMiddleware(
         return .merge(
             base,
             .task(id: ShoppingEffectID.featureFlags) {
-                let snapshot = await fetchFeatureFlags()
+                let snapshot = await featureFlags.fetchSnapshot()
                 return .featureFlags(.loaded(snapshot, now()))
             }
         )

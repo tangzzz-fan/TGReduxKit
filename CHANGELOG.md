@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Audited architecture**: pure `Reducer` → `Void`; Middleware returns `Effect` (`task` / `cancel` / `indirect merge`); `@MainActor` `Store` + `ScopedStore`; `TGReduxKitDebug`.
 - Swift Testing suites in `AuditedArchitectureTests.swift`.
-- Docs: `ADR_AUDITED_MIDDLEWARE_EFFECT.md`.
+- Docs: `ADR_AUDITED_MIDDLEWARE_EFFECT.md`, `DEPENDENCY_INJECTION.md`.
+- Demo: `ShoppingDependencies` + middleware factories (closure DI, no container).
 
 ### Changed
 - **Breaking**: Reducer no longer returns `Effect` (effects come from Middleware).
