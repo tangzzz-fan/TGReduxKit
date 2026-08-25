@@ -59,6 +59,17 @@ public final class ObservableStore<State: Sendable, Action: Sendable> {
     ) -> Binding<Value> {
         binding(get: { $0[keyPath: get] }, send: send)
     }
+
+    /// Updates the underlying actor store's `DependencyContext`.
+    public func withDependencies(_ update: @escaping @Sendable (inout DependencyContext) -> Void) {
+        Task { await store.withDependencies(update) }
+    }
+
+    public func withDependencies(
+        _ update: @escaping @Sendable (inout DependencyContext) -> Void
+    ) async {
+        await store.withDependencies(update)
+    }
 }
 
 extension View {

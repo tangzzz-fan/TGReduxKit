@@ -61,18 +61,41 @@ When a new effect with the same `id` is scheduled, Store **cancels** the previou
 
 ## Dependencies
 
-Prefer capturing services in the reducer factory, or read clocks/UUID from `DependencyContext`:
+Use `DependencyContext` for clocks **and** app services via `DependencyKey`:
 
 ```swift
+enum APIClientKey: DependencyKey {
+    static let liveValue: @Sendable () async throws -> User = { try await LiveAPI.fetchUser() }
+}
+
+extension DependencyContext {
+    var fetchUser: @Sendable () async throws -> User {
+        get { self[APIClientKey.self] }
+        set { self[APIClientKey.self] = newValue }
+    }
+}
+
 Reducer { state, action, context in
     switch action {
-    case .tick:
+    case .load:
+        let fetch = context.fetchUser
         return .run {
-            .stamped(context.date())
+            .loaded(try await fetch())
         }
+    case .tick:
+        return .run { .stamped(context.date()) }
     }
 }
 ```
+
+Override at the store boundary:
+
+```swift
+await store.withDependencies { $0.fetchUser = { .preview } }
+// or ObservableStore.withDependencies { ... }
+```
+
+Factory capture of services is fine for one-off wiring; prefer `DependencyKey` when the same service is shared across reducers or tests.
 
 ## Testing
 

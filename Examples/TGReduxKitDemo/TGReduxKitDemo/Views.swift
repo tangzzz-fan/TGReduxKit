@@ -1,13 +1,12 @@
 import SwiftUI
 import TGReduxKit
 import TGNavigationStack
-import ShoppingDomain
+import Shopping
 
 // MARK: - Product List
 
 struct ProductListView: View {
-    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
-    @Environment(ScopedStore<CatalogState, CatalogAction>.self) private var catalogStore
+    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
 
     var body: some View {
         List {
@@ -16,13 +15,13 @@ struct ProductListView: View {
 
                 TextField(
                     "Search products",
-                    text: catalogStore.binding(
-                        get: \.searchQuery,
-                        send: CatalogAction.searchQueryChanged
+                    text: store.binding(
+                        get: { $0.catalog.searchQuery },
+                        send: { .catalog(.searchQueryChanged($0)) }
                     )
                 )
 
-                if catalogStore.state.isSearching {
+                if store.state.catalog.isSearching {
                     HStack {
                         ProgressView()
                         Text("Searching...")
@@ -31,7 +30,7 @@ struct ProductListView: View {
                 }
             }
 
-            if catalogStore.state.showsFreeShippingBanner {
+            if store.state.catalog.showsFreeShippingBanner {
                 Section {
                     ProductBannerView(
                         title: "Free Shipping Active",
@@ -41,7 +40,7 @@ struct ProductListView: View {
             }
 
             Section("Products") {
-                if catalogStore.state.visibleProducts.isEmpty {
+                if store.state.catalog.visibleProducts.isEmpty {
                     ContentUnavailableView(
                         "No Products",
                         systemImage: "shippingbox",
@@ -49,13 +48,13 @@ struct ProductListView: View {
                     )
                 }
 
-                ForEach(catalogStore.state.visibleProducts) { product in
+                ForEach(store.state.catalog.visibleProducts) { product in
                     Button {
                         store.dispatch(.navigation(.push(.detail(product.id))))
                     } label: {
                         ProductRowView(
                             product: product,
-                            showsRecommendedBadge: catalogStore.state.showsRecommendedBadge
+                            showsRecommendedBadge: store.state.catalog.showsRecommendedBadge
                         )
                     }
                     .foregroundStyle(.primary)
@@ -82,7 +81,7 @@ struct ProductListView: View {
 
 struct ProductDetailView: View {
     let productID: UUID
-    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
+    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
 
     var product: Product? {
         store.state.product(for: productID)
@@ -96,15 +95,15 @@ struct ProductDetailView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(height: 200)
                     .padding()
-                
+
                 Text(product.name)
                     .font(.largeTitle)
                     .bold()
-                
+
                 Text("$\(product.price)")
                     .font(.title)
                     .foregroundStyle(.secondary)
-                
+
                 Text(product.description)
                     .padding()
 
@@ -154,11 +153,11 @@ struct ProductDetailView: View {
 // MARK: - Cart View
 
 struct CartView: View {
-    @Environment(ScopedStore<CartState, CartAction>.self) private var store
+    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
 
     var body: some View {
         List {
-            ForEach(store.state.items) { item in
+            ForEach(store.state.cart.items) { item in
                 HStack {
                     Text(item.product.name)
                     Spacer()
@@ -167,16 +166,16 @@ struct CartView: View {
                 }
             }
             .onDelete { indexSet in
-                store.dispatch(.remove(indexSet))
+                store.dispatch(.cart(.remove(indexSet)))
             }
 
-            if !store.state.items.isEmpty {
+            if !store.state.cart.items.isEmpty {
                 Section {
                     HStack {
                         Text("Total")
                             .bold()
                         Spacer()
-                        Text("$\(store.state.totalPrice)")
+                        Text("$\(store.state.cart.totalPrice)")
                             .bold()
                     }
                 }
@@ -187,10 +186,10 @@ struct CartView: View {
 }
 
 struct FeatureFlagStatusCard: View {
-    @Environment(ScopedStore<FeatureFlagsState, FeatureFlagsAction>.self) private var store
+    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
 
     private var enabledFlags: [String] {
-        let snapshot = store.state.snapshot
+        let snapshot = store.state.featureFlags.snapshot
         return [
             snapshot.isExpressCheckoutEnabled ? "Express Checkout" : nil,
             snapshot.showsFreeShippingBanner ? "Free Shipping Banner" : nil,
@@ -205,7 +204,7 @@ struct FeatureFlagStatusCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Remote Feature Flags")
                         .font(.headline)
-                    Text(store.state.lastSource?.rawValue ?? "Waiting for first load")
+                    Text(store.state.featureFlags.lastSource?.rawValue ?? "Waiting for first load")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -213,20 +212,20 @@ struct FeatureFlagStatusCard: View {
                 Spacer()
 
                 Button("Refresh") {
-                    store.dispatch(.loadRequested(.manualRefresh))
+                    store.dispatch(.featureFlags(.loadRequested(.manualRefresh)))
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(store.state.isLoading)
+                .disabled(store.state.featureFlags.isLoading)
             }
 
-            if store.state.isLoading {
+            if store.state.featureFlags.isLoading {
                 HStack(spacing: 8) {
                     ProgressView()
                     Text("Fetching remote configuration...")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-            } else if let lastUpdated = store.state.lastUpdated {
+            } else if let lastUpdated = store.state.featureFlags.lastUpdated {
                 Text("Last updated at \(lastUpdated.formatted(date: .omitted, time: .standard))")
                     .font(.caption)
                     .foregroundStyle(.secondary)

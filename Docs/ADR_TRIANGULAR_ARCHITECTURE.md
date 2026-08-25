@@ -35,4 +35,4 @@ Same package name `TGReduxKit`, multiple products. Optional umbrella target re-e
 
 - Breaking 5.0.0 API; see `MIGRATION_4_TO_5.md`
 - Apps no longer need `nonisolated` on domain models when Core has no MainActor default
-- Demo depends on new products; ShoppingDomain package remains example-side only
+- Demo depends on new products; example-side `Shopping` package remains local to the demo

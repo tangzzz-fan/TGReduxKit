@@ -26,7 +26,7 @@ public actor Store<State: Sendable, Action: Sendable> {
     }
 
     public func withDependencies(
-        _ update: (inout DependencyContext) -> Void
+        _ update: @Sendable (inout DependencyContext) -> Void
     ) {
         update(&dependencies)
     }

@@ -152,3 +152,41 @@ struct EffectOperatorTests {
         #expect(Date().timeIntervalSince(started) >= 0.025)
     }
 }
+
+@Suite
+struct DependencyKeyTests {
+    private enum AnswerKey: DependencyKey {
+        static let liveValue = 42
+    }
+
+    @Test
+    func unsetKeyReturnsLiveValue() {
+        let context = DependencyContext.live
+        #expect(context[AnswerKey.self] == 42)
+    }
+
+    @Test
+    func overrideReplacesLiveValue() {
+        var context = DependencyContext.live
+        context[AnswerKey.self] = 7
+        #expect(context[AnswerKey.self] == 7)
+    }
+
+    @Test
+    func withDependenciesUpdatesStore() async {
+        let store = Store(
+            initialState: CounterState(),
+            reducer: Reducer<CounterState, CounterAction> { state, action, context in
+                if case .set = action {
+                    state.count = context[AnswerKey.self]
+                }
+                return .none
+            },
+            dependencies: .immediate
+        )
+        await store.withDependencies { $0[AnswerKey.self] = 99 }
+        _ = await store.dispatch(.set(0))
+        let state = await store.currentState()
+        #expect(state.count == 99)
+    }
+}
