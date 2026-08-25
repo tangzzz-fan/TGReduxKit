@@ -9,7 +9,7 @@ TGReduxKit **5.0**：纯 `Reducer` → `Void`；Middleware 返回 `Effect`；`@M
 | 文档 | 说明 |
 |------|------|
 | [ADR_AUDITED_MIDDLEWARE_EFFECT.md](./ADR_AUDITED_MIDDLEWARE_EFFECT.md) | 架构决策 |
-| [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md) | 闭包 / 工厂注入（无 DI 容器） |
+| [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md) | 闭包/工厂注入；可选 FactoryKit（Demo 双入口） |
 | [MIGRATION_4_TO_5.md](./MIGRATION_4_TO_5.md) | 4.x → 5.0 |
 | [EFFECT_GUIDE.md](./EFFECT_GUIDE.md) | Effect、取消、debounce、竞态 |
 | [TESTING_GUIDE.md](./TESTING_GUIDE.md) | Reducer / Middleware / Store 测试 |
