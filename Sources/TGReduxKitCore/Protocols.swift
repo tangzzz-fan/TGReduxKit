@@ -1,7 +1,7 @@
 import Foundation
 
-/// Marker for Redux actions. All actions must be safely shareable across isolation domains.
-public protocol ReduxAction: Sendable {}
+/// All actions must be safely shareable across isolation domains.
+public protocol Action: Sendable {}
 
-/// Marker for Redux state. State values cross actor boundaries as snapshots.
-public protocol ReduxState: Sendable {}
+/// All state must be value-semantic and safely shareable across boundaries.
+public protocol State: Equatable, Sendable {}

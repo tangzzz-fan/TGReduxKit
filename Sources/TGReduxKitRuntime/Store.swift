@@ -2,110 +2,190 @@ import Foundation
 import Observation
 import TGReduxKitCore
 
-/// Main-actor observable state container. Owns effect scheduling and cancellation.
 @MainActor
 @Observable
-public final class Store<State: Sendable, Action: Sendable> {
+public final class Store<State: TGReduxKitCore.State, Action: TGReduxKitCore.Action>: StoreType {
     public private(set) var state: State
 
     @ObservationIgnored
     private let reducer: Reducer<State, Action>
 
     @ObservationIgnored
+    private let middlewares: [Middleware<State, Action>]
+
+    @ObservationIgnored
+    private var dispatchFunction: @MainActor (Action) -> Effect<Action> = { _ in .none() }
+
+    @ObservationIgnored
     private var managedTasks: [CancellationID: Task<Void, Never>] = [:]
+
+    @ObservationIgnored
+    private var childObservers: [UUID: WeakScopeObserver] = [:]
 
     public init(
         initialState: State,
-        reducer: Reducer<State, Action>
+        reducer: @escaping Reducer<State, Action>,
+        middlewares: [Middleware<State, Action>] = []
     ) {
         self.state = initialState
         self.reducer = reducer
+        self.middlewares = middlewares
+        rebuildDispatchChain()
     }
 
-    /// Fire-and-forget friendly. Returns a `Task` handle so callers may cancel; discard freely.
+    public func dispatch(_ action: Action) {
+        let effect = dispatchFunction(action)
+        execute(effect)
+    }
+
+    // MARK: - Scoping
+
+    public func scope<ChildState: TGReduxKitCore.State, ChildAction: TGReduxKitCore.Action>(
+        state keyPath: KeyPath<State, ChildState>,
+        action actionTransform: @escaping (ChildAction) -> Action
+    ) -> ScopedStore<ChildState, ChildAction> {
+        let child = ScopedStore<ChildState, ChildAction>(
+            stateProvider: { [weak self] in
+                guard let self else {
+                    fatalError("Store deallocated during state read")
+                }
+                return self.state[keyPath: keyPath]
+            },
+            dispatch: { [weak self] childAction in
+                self?.dispatch(actionTransform(childAction))
+            }
+        )
+        _ = addChildObserver(child)
+        return child
+    }
+
+    // MARK: - Task lifecycle (root-only)
+
     @discardableResult
-    public func dispatch(_ action: Action) -> Task<Void, Never>? {
-        let effect = reducer.reduce(&state, action)
-        return run(effect)
+    public func runTask(
+        id: CancellationID? = nil,
+        priority: TaskPriority? = nil,
+        operation: @escaping @Sendable () async -> Action?
+    ) -> Task<Void, Never> {
+        if let id {
+            cancelTask(id: id)
+        }
+
+        let task = Task(priority: priority) { [weak self] in
+            guard !Task.isCancelled else { return }
+
+            let action = await operation()
+
+            guard let self, let action, !Task.isCancelled else { return }
+            self.dispatch(action)
+
+            if let id {
+                self.managedTasks.removeValue(forKey: id)
+            }
+        }
+
+        if let id {
+            managedTasks[id] = task
+        }
+
+        return task
     }
 
-    /// Awaits completion of the scheduled effect tree for this dispatch (not nested follow-ups' full trees beyond returned tasks).
-    public func dispatchAndWait(_ action: Action) async {
-        if let task = dispatch(action) {
-            await task.value
+    @discardableResult
+    public func runTask(
+        id: CancellationID? = nil,
+        catching: @escaping @Sendable (Error) -> Action?,
+        priority: TaskPriority? = nil,
+        operation: @escaping @Sendable () async throws -> Void
+    ) -> Task<Void, Never> {
+        runTask(id: id, priority: priority) {
+            do {
+                try await operation()
+                return nil
+            } catch {
+                guard !Task.isCancelled else { return nil }
+                return catching(error)
+            }
         }
     }
 
-    private func run(_ effect: Effect<Action>) -> Task<Void, Never>? {
+    public func cancelTask(id: CancellationID) {
+        managedTasks.removeValue(forKey: id)?.cancel()
+    }
+
+    public func cancelAllTasks() {
+        let tasks = Array(managedTasks.values)
+        managedTasks.removeAll()
+        tasks.forEach { $0.cancel() }
+    }
+
+    // MARK: - Private
+
+    private func rebuildDispatchChain() {
+        let final: @MainActor (Action) -> Effect<Action> = { [weak self] action in
+            self?.applyReducer(action)
+            return .none()
+        }
+
+        dispatchFunction = middlewares.reversed().reduce(final) { next, middleware in
+            { [weak self] action in
+                guard let self else { return .none() }
+                return middleware(self, action, next)
+            }
+        }
+    }
+
+    private func applyReducer(_ action: Action) {
+        let oldState = state
+        reducer(&state, action)
+        if state != oldState {
+            notifyChildObservers()
+        }
+    }
+
+    private func execute(_ effect: Effect<Action>) {
         switch effect.operation {
         case .none:
-            return nil
-
+            break
+        case .task(let id, let priority, let work):
+            _ = runTask(id: id, priority: priority, operation: work)
         case .cancel(let id):
-            managedTasks[id]?.cancel()
-            managedTasks[id] = nil
-            return nil
-
+            cancelTask(id: id)
         case .merge(let effects):
-            let children = effects.compactMap { run($0) }
-            guard !children.isEmpty else { return nil }
-            return Task {
-                for child in children {
-                    await child.value
-                }
-            }
-
-        case .run(let id, let work):
-            let previous: Task<Void, Never>?
-            if let id {
-                previous = managedTasks[id]
-                previous?.cancel()
-            } else {
-                previous = nil
-            }
-
-            let task = Task { [weak self] in
-                if let previous {
-                    await previous.value
-                }
-                guard !Task.isCancelled else { return }
-                guard let self else { return }
-
-                let send = Send<Action> { action in
-                    await self.perform(action)
-                }
-
-                do {
-                    try await work(send)
-                } catch is CancellationError {
-                    return
-                } catch {
-                    return
-                }
-            }
-
-            if let id {
-                managedTasks[id] = task
-                Task { [weak self] in
-                    await task.value
-                    self?.finishTask(id: id, task: task)
-                }
-            }
-
-            return task
+            effects.forEach { execute($0) }
         }
     }
 
-    private func perform(_ action: Action) async {
-        let effect = reducer.reduce(&state, action)
-        if let task = run(effect) {
-            await task.value
-        }
+    func addChildObserver(_ observer: any ScopeObserver) -> UUID {
+        let id = UUID()
+        childObservers[id] = WeakScopeObserver(observer)
+        return id
     }
 
-    private func finishTask(id: CancellationID, task: Task<Void, Never>) {
-        if managedTasks[id] == task {
-            managedTasks[id] = nil
+    private func notifyChildObservers() {
+        let snapshot = childObservers
+        for entry in snapshot {
+            guard let observer = entry.value.value else {
+                childObservers.removeValue(forKey: entry.key)
+                continue
+            }
+            observer.refreshStateFromParent()
         }
+    }
+}
+
+// MARK: - Scope observation
+
+@MainActor
+protocol ScopeObserver: AnyObject {
+    func refreshStateFromParent()
+}
+
+@MainActor
+struct WeakScopeObserver {
+    weak var value: (any ScopeObserver)?
+
+    init(_ value: (any ScopeObserver)?) {
+        self.value = value
     }
 }

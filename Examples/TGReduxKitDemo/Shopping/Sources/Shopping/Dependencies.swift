@@ -1,8 +1,7 @@
 import Foundation
 import TGReduxKit
 
-// MARK: - Live service closures (captured by reducer factory — not DependencyContext)
-
+/// Live service closures captured by middleware factories.
 public enum ShoppingServices {
     public static let searchProducts: @Sendable (String, [Product]) async -> [Product] = { query, products in
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -46,4 +45,9 @@ private actor FeatureFlagVariants {
         try? await Task.sleep(for: .milliseconds(500))
         return snapshot
     }
+}
+
+public enum ShoppingEffectID {
+    public static let catalogSearch: CancellationID = "catalog-search"
+    public static let featureFlags: CancellationID = "feature-flags"
 }

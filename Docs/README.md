@@ -6,8 +6,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [ADR_INDUSTRIAL_COMPROMISE.md](./ADR_INDUSTRIAL_COMPROMISE.md) | **现行** MainActor Store + 流式 Effect 决策 |
-| [ADR_TRIANGULAR_ARCHITECTURE.md](./ADR_TRIANGULAR_ARCHITECTURE.md) | 早期三角 actor-Store 草案（已被工业妥协修订） |
+| [ADR_AUDITED_MIDDLEWARE_EFFECT.md](./ADR_AUDITED_MIDDLEWARE_EFFECT.md) | **现行** 纯 Reducer + Middleware→Effect |
+| [ADR_INDUSTRIAL_COMPROMISE.md](./ADR_INDUSTRIAL_COMPROMISE.md) | 先前 MainActor Store + Reducer→Effect 草案 |
 | [MIGRATION_4_TO_5.md](./MIGRATION_4_TO_5.md) | 4.x → 5.0 迁移 |
 | [EFFECT_GUIDE.md](./EFFECT_GUIDE.md) | Effect 创建、取消、debounce/throttle |
 | [DEFAULT_ACTOR_ISOLATION_AND_REDUX.md](./DEFAULT_ACTOR_ISOLATION_AND_REDUX.md) | 为何不再需要领域 `nonisolated` |

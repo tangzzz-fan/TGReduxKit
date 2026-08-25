@@ -8,21 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Architecture 5.0 (industrial compromise)**:
-  - `@MainActor @Observable` `Store` (SwiftUI-sync root); `ObservableStore` typealias.
-  - Nonisolated `Reducer` returns streaming `Effect` via `Send` (multi-value); no Middleware primary path.
-  - `dispatch` → `Task<Void, Never>?` for optional caller cancellation.
-  - Optional `DependencyKey` bag (not injected into reduce).
-  - Docs: `ADR_INDUSTRIAL_COMPROMISE.md`, counterexample verification suite.
+- **Audited architecture**: pure `Reducer` → `Void`; Middleware returns `Effect` (`task` / `cancel` / `indirect merge`); `@MainActor` `Store` + `ScopedStore`; `TGReduxKitDebug`.
+- Swift Testing suites in `AuditedArchitectureTests.swift`.
+- Docs: `ADR_AUDITED_MIDDLEWARE_EFFECT.md`.
 
 ### Changed
-- **Breaking**: Runtime `Store` is `@MainActor` class (not `actor`); remove actor→UI projection hop as the primary model.
-- **Breaking**: `Reducer` signature is `(inout State, Action) -> Effect` (no `DependencyContext` parameter).
-- **Breaking**: `Effect.run` is `send`-based; use `.run(producing:)` for single follow-up.
-- Demo `Shopping` captures service closures in `makeShoppingReducer`.
-
-### Removed
-- 4.x Middleware pipeline, `ScopedStore`, Store-level `runTask`/`debounce`/`throttle`/`timeout` API surface, and in-tree time-travel UI (first 5.0 cut).
+- **Breaking**: Reducer no longer returns `Effect` (effects come from Middleware).
+- **Breaking**: Protocols renamed to `State` / `Action` (qualify `@SwiftUI.State` at UI call sites).
 
 ## [4.0.1] - 2026-08-25
 

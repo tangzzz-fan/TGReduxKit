@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "TGReduxKitCore", targets: ["TGReduxKitCore"]),
         .library(name: "TGReduxKitRuntime", targets: ["TGReduxKitRuntime"]),
         .library(name: "TGReduxKitUI", targets: ["TGReduxKitUI"]),
+        .library(name: "TGReduxKitDebug", targets: ["TGReduxKitDebug"]),
         .library(name: "TGReduxKitTesting", targets: ["TGReduxKitTesting"]),
         .library(name: "TGReduxKit", targets: ["TGReduxKit"]),
     ],
@@ -27,12 +28,21 @@ let package = Package(
             dependencies: ["TGReduxKitCore", "TGReduxKitRuntime"]
         ),
         .target(
-            name: "TGReduxKitTesting",
+            name: "TGReduxKitDebug",
             dependencies: ["TGReduxKitCore", "TGReduxKitRuntime"]
         ),
         .target(
+            name: "TGReduxKitTesting",
+            dependencies: ["TGReduxKitCore"]
+        ),
+        .target(
             name: "TGReduxKit",
-            dependencies: ["TGReduxKitCore", "TGReduxKitRuntime", "TGReduxKitUI"]
+            dependencies: [
+                "TGReduxKitCore",
+                "TGReduxKitRuntime",
+                "TGReduxKitUI",
+                "TGReduxKitDebug"
+            ]
         ),
         .testTarget(
             name: "TGReduxKitTests",
@@ -40,6 +50,7 @@ let package = Package(
                 "TGReduxKitCore",
                 "TGReduxKitRuntime",
                 "TGReduxKitUI",
+                "TGReduxKitDebug",
                 "TGReduxKitTesting",
                 "TGReduxKit"
             ]
