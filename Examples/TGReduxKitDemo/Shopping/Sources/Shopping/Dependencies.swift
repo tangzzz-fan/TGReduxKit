@@ -77,4 +77,5 @@ public struct ShoppingDependencies: Sendable {
 public enum ShoppingEffectID {
     public static let catalogSearch: CancellationID = "catalog-search"
     public static let featureFlags: CancellationID = "feature-flags"
+    public static let asyncLab: CancellationID = "async-lab"
 }

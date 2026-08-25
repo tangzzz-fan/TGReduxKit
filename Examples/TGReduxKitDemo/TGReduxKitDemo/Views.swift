@@ -12,6 +12,7 @@ struct ProductListView: View {
         List {
             Section {
                 FeatureFlagStatusCard()
+                AsyncLabCard()
 
                 TextField(
                     "Search products",
@@ -221,6 +222,15 @@ struct FeatureFlagStatusCard: View {
                 .disabled(store.state.featureFlags.isLoading)
             }
 
+            Toggle(
+                "Simulate next load failure",
+                isOn: store.binding(
+                    get: { $0.featureFlags.simulateNextLoadFailure },
+                    send: { .featureFlags(.setSimulateNextLoadFailure($0)) }
+                )
+            )
+            .font(.subheadline)
+
             if store.state.featureFlags.isLoading {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -228,6 +238,10 @@ struct FeatureFlagStatusCard: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+            } else if let error = store.state.featureFlags.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
             } else if let lastUpdated = store.state.featureFlags.lastUpdated {
                 Text("Last updated at \(lastUpdated.formatted(date: .omitted, time: .standard))")
                     .font(.caption)
@@ -247,6 +261,63 @@ struct FeatureFlagStatusCard: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+struct AsyncLabCard: View {
+    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
+
+    private var lab: AsyncLabState { store.state.asyncLab }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Async Lab")
+                .font(.headline)
+            Text(
+                "CancellationID cancels the Task; long loops must still honor Task.isCancelled. Checking alone does not erase races — see README."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            Toggle(
+                "Respect Task.isCancelled",
+                isOn: store.binding(
+                    get: { $0.asyncLab.respectCancellation },
+                    send: { .asyncLab(.setRespectCancellation($0)) }
+                )
+            )
+            .disabled(lab.isRunning)
+
+            ProgressView(value: Double(lab.progress), total: Double(lab.totalSteps))
+
+            Text(lab.detail)
+                .font(.subheadline)
+                .foregroundStyle(outcomeColor)
+
+            HStack {
+                Button("Start long job") {
+                    store.dispatch(.asyncLab(.startLongJob))
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(lab.isRunning)
+
+                Button("Cancel") {
+                    store.dispatch(.asyncLab(.cancelJob))
+                }
+                .buttonStyle(.bordered)
+                .disabled(!lab.isRunning)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var outcomeColor: Color {
+        switch lab.outcome {
+        case .staleLeak: .red
+        case .cancelledCleanly: .orange
+        case .completed: .green
+        case .running, .idle: .secondary
+        }
     }
 }
 

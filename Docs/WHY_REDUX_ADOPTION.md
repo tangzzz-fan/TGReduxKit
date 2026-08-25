@@ -106,9 +106,9 @@
 
 ## 7. 风险（诚实边界）
 
-1. 需要纪律：忘记在长循环里看 `Task.isCancelled` 仍会出竞态  
-2. 小 Feature 可能显得样板偏多——可先用本地 `@State`  
-3. `ScopedStore` 不转发任务 API——取消挂在根 Store / Effect id  
+1. **协作取消不够单独挡竞态**：`CancellationID` 只取消 Task。长循环里**忘记**查 `Task.isCancelled` 会继续脏写；**查了**仍可能在「check → await」窗口里溜过期结果。要叠加 Reducer guard（见 [EFFECT_GUIDE.md](./EFFECT_GUIDE.md)、README「取消与竞态」）。  
+2. 小 Feature 可能显得样板偏多——可先用本地 `@State`。  
+3. `ScopedStore` 不转发任务 API——取消挂在根 Store / Effect id。  
 
 ---
 

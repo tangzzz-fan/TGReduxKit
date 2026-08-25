@@ -32,7 +32,32 @@ Effect.fireAndForget {
 }
 ```
 
-Same `CancellationID` on a new `.task` **replaces** the previous task (latest-wins). `.cancel(id:)` stops it; `Task.isCancelled` should be checked in long loops.
+Same `CancellationID` on a new `.task` **replaces** the previous task (latest-wins). `.cancel(id:)` marks the Task cancelled.
+
+## Cooperative cancel ≠ no races
+
+Store cancellation is **cooperative**:
+
+```swift
+.task(id: "job") {
+    for step in 1...n {
+        try? await Task.sleep(for: .milliseconds(400))
+        guard !Task.isCancelled else { return nil }  // after every await
+        // …
+    }
+    guard !Task.isCancelled else { return nil }
+    return .finished
+}
+```
+
+| Fact | Implication |
+|------|-------------|
+| Forgetting `Task.isCancelled` in long loops | Work continues; mid-loop `store.dispatch` **bypasses** Store’s guard on the Effect return value → stale writes |
+| Checking `Task.isCancelled` in the loop | Necessary, **still not enough alone** — window between check and next `await`; result may arrive after a newer intent |
+| Store drops returned Action if `Task.isCancelled` | Helps the return path only; does not rewrite your manual `dispatch` calls |
+| Reducer guards (`query == state.searchQuery`) | Logical latest-wins when a late Action still slips through |
+
+Demo: **Async Lab** in `TGReduxKitDemo` (toggle respect vs leak). Search uses debounce id + reducer query guard + post-await `isCancelled` check.
 
 ## Middleware shape
 
@@ -44,8 +69,14 @@ func makeAPIMiddleware(api: APIClient) -> Middleware<AppState, AppAction> {
         return .merge(
             base,
             .task(id: "fetch-user") {
-                do { return .userLoaded(try await api.fetchUser(id: id)) }
-                catch { return .loadFailed(error) }
+                do {
+                    let user = try await api.fetchUser(id: id)
+                    guard !Task.isCancelled else { return nil }
+                    return .userLoaded(user)
+                } catch {
+                    guard !Task.isCancelled else { return nil }
+                    return .loadFailed(error)
+                }
             }
         )
     }
@@ -58,7 +89,7 @@ Capture `@Sendable` dependencies in the factory — do not put them on `Store`. 
 
 | | Question | Mechanism |
 |--|----------|-----------|
-| **A** | Old async results polluting state? | Same effect `id` → previous task cancelled; optionally guard in reducer with request token / query |
-| **B** | Lifecycle / teardown? | `.cancel(id:)` or Store deinit clearing `managedTasks` |
+| **A** | Old async results polluting state? | Same effect `id` + post-await `isCancelled` + reducer token/query guard |
+| **B** | Lifecycle / teardown? | `.cancel(id:)` / replace same id; honor `Task.isCancelled` in the body |
 
 Prefer effect IDs for IO that must be latest-wins (search, refresh). Use reducer guards when multiple independent streams share state.

@@ -8,6 +8,7 @@ public struct ShoppingState: Equatable, Sendable, State {
     public var catalog: CatalogState
     public var cart: CartState = .init()
     public var featureFlags: FeatureFlagsState = .init()
+    public var asyncLab: AsyncLabState = .init()
     public var isExpressCheckoutAvailable = false
     public var navigation: NavigationState<ShoppingRoute> = .init(path: [])
 
@@ -84,17 +85,24 @@ public struct FeatureFlagsState: Equatable, Sendable, State {
     public var isLoading: Bool
     public var lastUpdated: Date?
     public var lastSource: FeatureFlagLoadSource?
+    public var lastError: String?
+    /// Demo toggle: next load fails so Middleware returns `.loadFailed`.
+    public var simulateNextLoadFailure: Bool
 
     public init(
         snapshot: FeatureFlagSnapshot = .default,
         isLoading: Bool = false,
         lastUpdated: Date? = nil,
-        lastSource: FeatureFlagLoadSource? = nil
+        lastSource: FeatureFlagLoadSource? = nil,
+        lastError: String? = nil,
+        simulateNextLoadFailure: Bool = false
     ) {
         self.snapshot = snapshot
         self.isLoading = isLoading
         self.lastUpdated = lastUpdated
         self.lastSource = lastSource
+        self.lastError = lastError
+        self.simulateNextLoadFailure = simulateNextLoadFailure
     }
 }
 
@@ -129,12 +137,48 @@ public enum FeatureFlagLoadSource: String, Equatable, Sendable {
     case manualRefresh = "Manual Refresh"
 }
 
+/// Pedagogy slice: long-running Effect + cancel vs forgetting `Task.isCancelled`.
+public struct AsyncLabState: Equatable, Sendable, State {
+    public var respectCancellation: Bool
+    public var isRunning: Bool
+    public var progress: Int
+    public var totalSteps: Int
+    public var outcome: AsyncLabOutcome
+    public var detail: String
+
+    public init(
+        respectCancellation: Bool = true,
+        isRunning: Bool = false,
+        progress: Int = 0,
+        totalSteps: Int = 5,
+        outcome: AsyncLabOutcome = .idle,
+        detail: String = "Idle — start a long job, then Cancel."
+    ) {
+        self.respectCancellation = respectCancellation
+        self.isRunning = isRunning
+        self.progress = progress
+        self.totalSteps = totalSteps
+        self.outcome = outcome
+        self.detail = detail
+    }
+}
+
+public enum AsyncLabOutcome: String, Equatable, Sendable {
+    case idle
+    case running
+    case completed
+    case cancelledCleanly
+    /// Stale follow-up after cancel because the Effect ignored `Task.isCancelled`.
+    case staleLeak
+}
+
 // MARK: - Action
 
 public enum ShoppingAction: Equatable, Sendable, Action {
     case catalog(CatalogAction)
     case cart(CartAction)
     case featureFlags(FeatureFlagsAction)
+    case asyncLab(AsyncLabAction)
     case navigation(NavigationAction<ShoppingRoute>)
     case handleDeepLink(URL)
 }
@@ -152,6 +196,18 @@ public enum CartAction: Equatable, Sendable, Action {
 public enum FeatureFlagsAction: Equatable, Sendable, Action {
     case loadRequested(FeatureFlagLoadSource)
     case loaded(FeatureFlagSnapshot, Date)
+    case loadFailed(String)
+    case setSimulateNextLoadFailure(Bool)
+}
+
+public enum AsyncLabAction: Equatable, Sendable, Action {
+    case setRespectCancellation(Bool)
+    case startLongJob
+    case cancelJob
+    case progress(Int)
+    case finished(String)
+    case cancelledCleanly
+    case leakedAfterCancel(String)
 }
 
 // MARK: - Pure helpers

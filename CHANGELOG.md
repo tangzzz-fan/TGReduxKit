@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Demo**: Async Lab（长任务 + Cancel；可关 `Task.isCancelled` 演示脏写泄漏）、Feature Flags 模拟失败、搜索清空时 `.cancel`。
+- **Docs**: README / EFFECT_GUIDE 阐明「协作取消 ≠ 无竞态」三层防护。
+
 ## [5.0.0] - 2026-08-25
 
 ### Added
