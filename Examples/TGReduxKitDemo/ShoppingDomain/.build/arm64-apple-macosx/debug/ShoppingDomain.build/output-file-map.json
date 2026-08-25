@@ -1,0 +1,26 @@
+{
+  "": {
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/primary.swiftdeps"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Models.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Services.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/StateAndActions.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.dia"
+  }
+}

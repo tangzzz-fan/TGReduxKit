@@ -23,6 +23,7 @@
 | [ASYNC_FLOW_ANALYSIS.md](./ASYNC_FLOW_ANALYSIS.md) | Store / Middleware / Reducer / ScopedStore 的异步流分析 |
 | [WHY_REDUX_ADOPTION.md](./WHY_REDUX_ADOPTION.md) | 为什么采用轻量 Redux，以及与裸 SwiftUI / TCA 的取舍 |
 | [STRICT_CONCURRENCY_MIGRATION.md](./STRICT_CONCURRENCY_MIGRATION.md) | Swift 6 严格并发收口说明 |
+| [DEFAULT_ACTOR_ISOLATION_AND_REDUX.md](./DEFAULT_ACTOR_ISOLATION_AND_REDUX.md) | 默认 MainActor 与 Redux 领域模型的冲突、本质与最佳实践 |
 | [ANALYSIS_AND_GUIDE.md](./ANALYSIS_AND_GUIDE.md) | 历史架构分析与改进思路，适合做设计回顾时参考 |
 
 ## 审阅与维护

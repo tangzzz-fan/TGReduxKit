@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 181A97752F17EB0100053FDC /* TGReduxKit */; };
-                18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGNavigationStack */; };
 		182584882F17E6350088449D /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 182584872F17E6350088449D /* TGReduxKit */; };
+		18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGNavigationStack */; };
+		18F0A0112F17E6350088449D /* ShoppingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0102F17E6350088449D /* ShoppingDomain */; };
+		18F0A0132F17E6350088449D /* ShoppingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0142F17E6350088449D /* ShoppingDomain */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,7 +60,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                                18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */,
+				18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */,
+				18F0A0112F17E6350088449D /* ShoppingDomain in Frameworks */,
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
 				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
 			);
@@ -68,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				18F0A0132F17E6350088449D /* ShoppingDomain in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,7 +125,8 @@
 			);
 			name = TGReduxKitDemo;
 			packageProductDependencies = (
-                                18F0A0002F17E6350088449D /* TGNavigationStack */,
+				18F0A0002F17E6350088449D /* TGNavigationStack */,
+				18F0A0102F17E6350088449D /* ShoppingDomain */,
 				182584872F17E6350088449D /* TGReduxKit */,
 				181A97752F17EB0100053FDC /* TGReduxKit */,
 			);
@@ -147,6 +152,7 @@
 			);
 			name = TGReduxKitDemoTests;
 			packageProductDependencies = (
+				18F0A0142F17E6350088449D /* ShoppingDomain */,
 			);
 			productName = TGReduxKitDemoTests;
 			productReference = 182584362F17E3270088449D /* TGReduxKitDemoTests.xctest */;
@@ -183,7 +189,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					182584282F17E3260088449D = {
 						CreatedOnToolsVersion = 26.2;
@@ -209,7 +215,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */,
-                                18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */,
+				18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */,
+				18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1825842A2F17E3260088449D /* Products */;
@@ -344,6 +351,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -401,6 +409,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -600,25 +609,17 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../../TGReduxKit;
 		};
+		18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../TGNavigationStack;
+		};
+		18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ShoppingDomain;
+		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-                18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */ = {
-                        isa = XCRemoteSwiftPackageReference;
-                        repositoryURL = "https://github.com/tangzzz-fan/TGNavigationStack";
-                        requirement = {
-                                kind = upToNextMajorVersion;
-                                minimumVersion = 1.0.0;
-                        };
-                };
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
-                18F0A0002F17E6350088449D /* TGNavigationStack */ = {
-                        isa = XCSwiftPackageProductDependency;
-                        package = 18F0A0022F17E6350088449D /* XCRemoteSwiftPackageReference "TGNavigationStack" */;
-                        productName = TGNavigationStack;
-                };
 		181A97752F17EB0100053FDC /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGReduxKit;
@@ -626,6 +627,21 @@
 		182584872F17E6350088449D /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGReduxKit;
+		};
+		18F0A0002F17E6350088449D /* TGNavigationStack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */;
+			productName = TGNavigationStack;
+		};
+		18F0A0102F17E6350088449D /* ShoppingDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */;
+			productName = ShoppingDomain;
+		};
+		18F0A0142F17E6350088449D /* ShoppingDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */;
+			productName = ShoppingDomain;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

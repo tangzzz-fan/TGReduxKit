@@ -1,0 +1,40 @@
+{
+  "": {
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/primary.swiftdeps"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationAction.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationReducer.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationState.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGNavigationStack.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.dia"
+  },
+  "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGRoute.swift": {
+    "dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.d",
+    "object": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.swift.o",
+    "swiftmodule": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute~partial.swiftmodule",
+    "swift-dependencies": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.swiftdeps",
+    "diagnostics": "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.dia"
+  }
+}

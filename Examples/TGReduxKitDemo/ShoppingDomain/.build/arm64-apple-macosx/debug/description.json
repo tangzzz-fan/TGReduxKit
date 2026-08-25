@@ -1,0 +1,485 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.ShoppingDomain-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/sources",
+      "importPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Services.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/StateAndActions.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules/TGNavigationStack.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "ShoppingDomain",
+      "moduleOutputPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules/ShoppingDomain.swiftmodule",
+      "objects" : [
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/include/ShoppingDomain-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "shoppingdomain"
+      ],
+      "outputFileMapPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Models.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/Services.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/StateAndActions.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules/ShoppingDomain.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Models.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Services.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/StateAndActions.swift"
+      ],
+      "tempsPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.TGNavigationStack-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/sources",
+      "importPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationAction.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationReducer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGNavigationStack.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGRoute.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "TGNavigationStack",
+      "moduleOutputPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules/TGNavigationStack.swiftmodule",
+      "objects" : [
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.swift.o",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/include/TGNavigationStack-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "tgnavigationstack"
+      ],
+      "outputFileMapPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationAction.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationReducer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/NavigationState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGNavigationStack.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/TGRoute.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules/TGNavigationStack.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationAction.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationReducer.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationState.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGNavigationStack.swift",
+        "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGRoute.swift"
+      ],
+      "tempsPath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "ShoppingDomain" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "ShoppingDomain",
+      "-package-name",
+      "shoppingdomain",
+      "-c",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Models.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Services.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/StateAndActions.swift",
+      "-I",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/include/ShoppingDomain-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "shoppingdomain",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "TGNavigationStack" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "TGNavigationStack",
+      "-package-name",
+      "tgnavigationstack",
+      "-c",
+      "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationAction.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationReducer.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationState.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGNavigationStack.swift",
+      "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGRoute.swift",
+      "-I",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/include/TGNavigationStack-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "tgnavigationstack",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "ShoppingDomain" : [
+      "TGNavigationStack"
+    ],
+    "TGNavigationStack" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Models.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/Services.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/Sources/ShoppingDomain/StateAndActions.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/ShoppingDomain.build/sources"
+    },
+    "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationAction.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationReducer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/NavigationState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGNavigationStack.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/bigapple/Developments/TG Libraries/TGNavigationStack/Sources/TGNavigationStack/TGRoute.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/TGNavigationStack.build/sources"
+    },
+    "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/bigapple/Developments/TG Libraries/TGReduxKit/Examples/TGReduxKitDemo/ShoppingDomain/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

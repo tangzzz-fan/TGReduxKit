@@ -104,3 +104,5 @@ Async side effect
 ## 一句话总结
 
 > TGReduxKit 现在是一套以 MainActor 作为状态演进边界、面向 Swift 6+ 严格并发环境的状态管理库。
+
+接入方若使用 Xcode 26 的「默认 MainActor」App 模板，领域 State / Action 应放在无 MainActor 默认的 Domain 模块（见 Demo 的 `ShoppingDomain`），而不是在 App 里逐类型标 `nonisolated`。详见 [DEFAULT_ACTOR_ISOLATION_AND_REDUX.md](./DEFAULT_ACTOR_ISOLATION_AND_REDUX.md)。

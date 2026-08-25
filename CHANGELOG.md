@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-08-25
+
 ### Changed
 - **Async / Throttle**: `throttle` 的锁现在覆盖「节流窗口 ∪ 本次 in-flight operation」。
   - 窗口结束后若首次操作仍在运行，后续 leading-edge 调用继续被忽略，避免叠加工。
@@ -14,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 计时器被取消（operation 先完成）时不再误判为超时。
   - `timeoutMs <= 0` 时跳过超时竞速，行为与普通 `runTask(id:)` 一致。
 - **Docs**: 在 `ASYNC_RACE_AND_CANCELLATION.md` / `ADVANCED_USAGE.md` 中明确 throttle 锁与 timeout 协作取消边界。
+- **Docs**: 新增 `DEFAULT_ACTOR_ISOLATION_AND_REDUX.md`，说明 Xcode 默认 MainActor 与 Redux 领域模型的边界与最佳实践（优先拆 Domain 模块，而非逐类型标 `nonisolated`）。
+- **Demo**: 抽出本地包 `ShoppingDomain`（无 MainActor 默认）承载 State / Action / Model / 服务；App 保留 MainActor 默认，只保留 Reducer / Middleware / View。
+  - Demo 改为本地依赖 `TGNavigationStack`，便于对齐导航包最新严格并发改动。
 
 ### Fixed
 - **Tests**: 新增回归用例，覆盖 throttle in-flight 锁、timeout 获胜前不调用 fallback、非正 `timeoutMs` 短路。
