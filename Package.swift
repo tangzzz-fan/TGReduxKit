@@ -1,6 +1,4 @@
 // swift-tools-version: 6.0
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
 import PackageDescription
 
 let package = Package(
@@ -12,18 +10,40 @@ let package = Package(
         .watchOS(.v10)
     ],
     products: [
-        .library(
-            name: "TGReduxKit",
-            targets: ["TGReduxKit"]
-        ),
+        .library(name: "TGReduxKitCore", targets: ["TGReduxKitCore"]),
+        .library(name: "TGReduxKitRuntime", targets: ["TGReduxKitRuntime"]),
+        .library(name: "TGReduxKitUI", targets: ["TGReduxKitUI"]),
+        .library(name: "TGReduxKitTesting", targets: ["TGReduxKitTesting"]),
+        .library(name: "TGReduxKit", targets: ["TGReduxKit"]),
     ],
     targets: [
+        .target(name: "TGReduxKitCore"),
         .target(
-            name: "TGReduxKit"
+            name: "TGReduxKitRuntime",
+            dependencies: ["TGReduxKitCore"]
+        ),
+        .target(
+            name: "TGReduxKitUI",
+            dependencies: ["TGReduxKitCore", "TGReduxKitRuntime"]
+        ),
+        .target(
+            name: "TGReduxKitTesting",
+            dependencies: ["TGReduxKitCore", "TGReduxKitRuntime"]
+        ),
+        .target(
+            name: "TGReduxKit",
+            dependencies: ["TGReduxKitCore", "TGReduxKitRuntime", "TGReduxKitUI"]
         ),
         .testTarget(
             name: "TGReduxKitTests",
-            dependencies: ["TGReduxKit"]
+            dependencies: [
+                "TGReduxKitCore",
+                "TGReduxKitRuntime",
+                "TGReduxKitUI",
+                "TGReduxKitTesting",
+                "TGReduxKit"
+            ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )
