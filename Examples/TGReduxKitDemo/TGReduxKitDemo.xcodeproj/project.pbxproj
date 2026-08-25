@@ -10,8 +10,8 @@
 		181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 181A97752F17EB0100053FDC /* TGReduxKit */; };
 		182584882F17E6350088449D /* TGReduxKit in Frameworks */ = {isa = PBXBuildFile; productRef = 182584872F17E6350088449D /* TGReduxKit */; };
 		18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGNavigationStack */; };
-		18F0A0112F17E6350088449D /* ShoppingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0102F17E6350088449D /* ShoppingDomain */; };
-		18F0A0132F17E6350088449D /* ShoppingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0142F17E6350088449D /* ShoppingDomain */; };
+		18F0A0112F17E6350088449D /* Shopping in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0102F17E6350088449D /* Shopping */; };
+		18F0A0132F17E6350088449D /* Shopping in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0142F17E6350088449D /* Shopping */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,7 +61,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */,
-				18F0A0112F17E6350088449D /* ShoppingDomain in Frameworks */,
+				18F0A0112F17E6350088449D /* Shopping in Frameworks */,
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
 				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
 			);
@@ -71,7 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				18F0A0132F17E6350088449D /* ShoppingDomain in Frameworks */,
+				18F0A0132F17E6350088449D /* Shopping in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,7 +126,7 @@
 			name = TGReduxKitDemo;
 			packageProductDependencies = (
 				18F0A0002F17E6350088449D /* TGNavigationStack */,
-				18F0A0102F17E6350088449D /* ShoppingDomain */,
+				18F0A0102F17E6350088449D /* Shopping */,
 				182584872F17E6350088449D /* TGReduxKit */,
 				181A97752F17EB0100053FDC /* TGReduxKit */,
 			);
@@ -152,7 +152,7 @@
 			);
 			name = TGReduxKitDemoTests;
 			packageProductDependencies = (
-				18F0A0142F17E6350088449D /* ShoppingDomain */,
+				18F0A0142F17E6350088449D /* Shopping */,
 			);
 			productName = TGReduxKitDemoTests;
 			productReference = 182584362F17E3270088449D /* TGReduxKitDemoTests.xctest */;
@@ -216,7 +216,7 @@
 			packageReferences = (
 				181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */,
 				18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */,
-				18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */,
+				18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1825842A2F17E3260088449D /* Products */;
@@ -613,9 +613,9 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../../TGNavigationStack;
 		};
-		18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */ = {
+		18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ShoppingDomain;
+			relativePath = Shopping;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -633,15 +633,15 @@
 			package = 18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */;
 			productName = TGNavigationStack;
 		};
-		18F0A0102F17E6350088449D /* ShoppingDomain */ = {
+		18F0A0102F17E6350088449D /* Shopping */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */;
-			productName = ShoppingDomain;
+			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */;
+			productName = Shopping;
 		};
-		18F0A0142F17E6350088449D /* ShoppingDomain */ = {
+		18F0A0142F17E6350088449D /* Shopping */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "ShoppingDomain" */;
-			productName = ShoppingDomain;
+			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */;
+			productName = Shopping;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

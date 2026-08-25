@@ -27,7 +27,7 @@ xcodebuild -project Examples/TGReduxKitDemo/TGReduxKitDemo.xcodeproj -scheme TGR
 - `Sources/TGReduxKitUI` — `ObservableStore`, `provideStore`
 - `Sources/TGReduxKitTesting` — `TestStore`
 - `Sources/TGReduxKit` — `@_exported` umbrella
-- `Examples/TGReduxKitDemo` — shopping demo (+ local `ShoppingDomain` package)
+- `Examples/TGReduxKitDemo` — shopping demo (+ local `Shopping` package)
 - Navigation: sibling `TGNavigationStack`
 
 ## Design rules

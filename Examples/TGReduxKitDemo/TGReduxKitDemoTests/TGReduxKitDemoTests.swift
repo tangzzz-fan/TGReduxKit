@@ -8,7 +8,7 @@
 import Foundation
 import Testing
 @testable import TGReduxKitDemo
-import ShoppingDomain
+import Shopping
 
 struct TGReduxKitDemoTests {
     @Test func visibleProductsAppliesPremiumCatalogFlag() async throws {

@@ -34,7 +34,9 @@ import Testing
 
 `TestStore` 的 `send(_:expect:)` / `assert(...)` 现在通过抛出 `TestStoreAssertionError` 报告失败，因此可以直接和 Swift Testing、XCTest 的错误模型对齐，而不会用 `fatalError` 终止整个测试进程。
 
-## 第二层：Middleware 单元测试（补充，~15%）
+## 第二层：Effect / 依赖注入测试（补充，~15%）
+
+> **5.0**：异步侧效由 reducer 返回的 `Effect` 承担；业务依赖用 `DependencyKey` 挂在 `DependencyContext` 上，经 `withDependencies` 覆盖。下面的 Middleware + `ShoppingDependencies` 示例属于 4.x，迁移时改成 Effect + `DependencyKey`（见 `EFFECT_GUIDE.md` 与 Demo `Shopping` 模块）。
 
 Middleware 是闭包，可以构造 Store + mock 依赖来直接测试，不需要启动 App：
 
@@ -66,7 +68,7 @@ Middleware 是闭包，可以构造 Store + mock 依赖来直接测试，不需�
 }
 ```
 
-关键技巧：把网络、数据库等外部依赖**协议化**，在测试中注入 mock。这与 Demo 中 `ShoppingDependencies` 的设计一致。
+关键技巧（5.0）：用 `DependencyKey` 注入函数值，在测试中 `withDependencies` 覆盖；不必再维护 `ShoppingDependencies` 协议袋。
 
 ## 第三层：集成冒烟测试（少量，~5%）
 

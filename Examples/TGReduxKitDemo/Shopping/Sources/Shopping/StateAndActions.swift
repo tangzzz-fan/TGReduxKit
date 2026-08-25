@@ -3,7 +3,7 @@ import TGNavigationStack
 
 // MARK: - State
 
-public struct ShoppingState: Equatable {
+public struct ShoppingState: Equatable, Sendable {
     public var catalog: CatalogState
     public var cart: CartState = .init()
     public var featureFlags: FeatureFlagsState = .init()
@@ -34,7 +34,7 @@ public struct ShoppingState: Equatable {
     }
 }
 
-public struct CatalogState: Equatable {
+public struct CatalogState: Equatable, Sendable {
     public var allProducts: [Product]
     public var visibleProducts: [Product]
     public var searchQuery: String = ""
@@ -62,7 +62,7 @@ public struct CatalogState: Equatable {
     }
 }
 
-public struct CartState: Equatable {
+public struct CartState: Equatable, Sendable {
     public var items: [CartItem] = []
 
     public init(items: [CartItem] = []) {
@@ -78,7 +78,7 @@ public struct CartState: Equatable {
     }
 }
 
-public struct FeatureFlagsState: Equatable {
+public struct FeatureFlagsState: Equatable, Sendable {
     public var snapshot: FeatureFlagSnapshot
     public var isLoading: Bool
     public var lastUpdated: Date?
@@ -130,7 +130,7 @@ public enum FeatureFlagLoadSource: String, Equatable, Sendable {
 
 // MARK: - Action
 
-public enum ShoppingAction: Equatable {
+public enum ShoppingAction: Equatable, Sendable {
     case catalog(CatalogAction)
     case cart(CartAction)
     case featureFlags(FeatureFlagsAction)
@@ -138,17 +138,17 @@ public enum ShoppingAction: Equatable {
     case handleDeepLink(URL)
 }
 
-public enum CatalogAction: Equatable {
+public enum CatalogAction: Equatable, Sendable {
     case searchQueryChanged(String)
     case searchCompleted(String, [Product])
 }
 
-public enum CartAction: Equatable {
+public enum CartAction: Equatable, Sendable {
     case add(Product)
     case remove(IndexSet)
 }
 
-public enum FeatureFlagsAction: Equatable {
+public enum FeatureFlagsAction: Equatable, Sendable {
     case loadRequested(FeatureFlagLoadSource)
     case loaded(FeatureFlagSnapshot, Date)
 }

@@ -26,6 +26,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [ARCHITECTURE_DI_AND_SHOPPING_MODULE.md](./ARCHITECTURE_DI_AND_SHOPPING_MODULE.md) | DependencyContext 统一注入 + Demo `Shopping` 模块：优点 / 缺点 / 否决方案 |
 | [0825_reviews_01.md](./0825_reviews_01.md) / [0825_reviews_02.md](./0825_reviews_02.md) | 原始 review 文稿 |
 | [ASYNC_RACE_AND_CANCELLATION.md](./ASYNC_RACE_AND_CANCELLATION.md) | 异步竞态（Effect 调度仍适用 latest-wins） |
 | [WHY_REDUX_ADOPTION.md](./WHY_REDUX_ADOPTION.md) | 为何采用轻量 Redux |
