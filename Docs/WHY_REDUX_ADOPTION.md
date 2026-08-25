@@ -64,7 +64,7 @@
 
 ### 4.5 DI 在门外
 
-`ShoppingDependencies` + middleware 工厂（闭包捕获）。见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md)。
+每个 Middleware **工厂参数**注入（Demo：`makeCatalogSearchMiddleware(productSearch:)`）。见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md)。**不要**用 `*Dependencies` 袋二次分发。
 
 ### 4.6 SwiftUI
 

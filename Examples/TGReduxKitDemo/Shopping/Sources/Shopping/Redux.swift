@@ -172,21 +172,7 @@ private let crossCuttingReducer: Reducer<ShoppingState, ShoppingAction> = { stat
     }
 }
 
-// MARK: - Middleware factories (DI at the door — capture deps, never inject into Store/Reducer)
-
-/// Composition helper: build the middleware stack from explicit dependencies.
-public func makeShoppingMiddlewares(
-    dependencies: ShoppingDependencies = .live
-) -> [Middleware<ShoppingState, ShoppingAction>] {
-    [
-        makeCatalogSearchMiddleware(productSearch: dependencies.productSearch),
-        makeFeatureFlagsMiddleware(
-            featureFlags: dependencies.featureFlags,
-            now: dependencies.now
-        ),
-        makeAsyncLabMiddleware()
-    ]
-}
+// MARK: - Middleware factories (5.0 DI: each factory takes its own deps — no bag / no container)
 
 public func makeCatalogSearchMiddleware(
     productSearch: any ProductSearching
@@ -215,7 +201,7 @@ public func makeCatalogSearchMiddleware(
 
 public func makeFeatureFlagsMiddleware(
     featureFlags: any FeatureFlagFetching,
-    now: @escaping @Sendable () -> Date
+    now: @escaping @Sendable () -> Date = { Date() }
 ) -> Middleware<ShoppingState, ShoppingAction> {
     { store, action, next in
         let base = next(action)

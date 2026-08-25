@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Demo**: Async Lab（长任务 + Cancel；可关 `Task.isCancelled` 演示脏写泄漏）、Feature Flags 模拟失败、搜索清空时 `.cancel`。
 - **Docs**: README / EFFECT_GUIDE 阐明「协作取消 ≠ 无竞态」三层防护。
 
+### Changed
+- **Demo / DI**: 移除 `ShoppingDependencies` 袋与 `makeShoppingMiddlewares`；Composition Root 直接调用各 Middleware 工厂（5.0 推荐）。
+
 ## [5.0.0] - 2026-08-25
 
 ### Added

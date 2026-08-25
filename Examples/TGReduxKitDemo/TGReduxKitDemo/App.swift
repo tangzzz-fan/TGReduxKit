@@ -3,23 +3,26 @@ import TGReduxKit
 import TGNavigationStack
 import Shopping
 
-/// Composition Root — assemble dependencies here, never inside Reducer / Store.
+/// Composition Root — wire each Middleware factory with its deps (5.0; no dependency bag).
 public struct ShoppingAppView: View {
     @SwiftUI.State private var store: Store<ShoppingState, ShoppingAction>
 
-    /// Production entry: live services injected into middleware factories.
-    public init() {
-        self.init(dependencies: .live)
-    }
-
-    /// Test / preview entry: swap `ShoppingDependencies` without a DI container.
-    public init(dependencies: ShoppingDependencies) {
-        let middlewares = makeShoppingMiddlewares(dependencies: dependencies)
+    /// Production / preview entry: pass live or mock services directly into factories.
+    public init(
+        productSearch: any ProductSearching = LiveProductSearchService(),
+        featureFlags: any FeatureFlagFetching = LiveFeatureFlagService(),
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) {
+        let middlewares: [Middleware<ShoppingState, ShoppingAction>] = [
+            makeCatalogSearchMiddleware(productSearch: productSearch),
+            makeFeatureFlagsMiddleware(featureFlags: featureFlags, now: now),
+            makeAsyncLabMiddleware()
+        ]
         _store = SwiftUI.State(
             initialValue: Store(
                 initialState: ShoppingState(),
                 reducer: shoppingReducer, // pure — no deps
-                middlewares: middlewares  // deps captured inside factories
+                middlewares: middlewares  // deps already captured in each factory
             )
         )
     }
@@ -55,11 +58,7 @@ public struct ShoppingAppView: View {
 }
 
 #Preview("Fixed flags") {
-    ShoppingAppView(
-        dependencies: ShoppingDependencies(
-            featureFlags: PreviewFeatureFlagService()
-        )
-    )
+    ShoppingAppView(featureFlags: PreviewFeatureFlagService())
 }
 
 /// Preview / test double — swap at the Composition Root.

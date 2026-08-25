@@ -85,7 +85,7 @@ Qualify `@SwiftUI.State` when the `State` protocol is in scope.
 | Capture `Sendable` services in Effect closures | Use a global `DependencyValues` registry |
 | Pass mocks into factories in tests / Previews | Call live networking from the reducer |
 
-Demo reference: `ShoppingDependencies` + `makeShoppingMiddlewares(dependencies:)`.
+Demo reference: Composition Root calls `makeCatalogSearchMiddleware(productSearch:)` / `makeFeatureFlagsMiddleware(featureFlags:now:)` directly — no `*Dependencies` bag.
 
 ## Domain isolation
 

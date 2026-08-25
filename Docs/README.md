@@ -25,4 +25,4 @@ TGReduxKit **5.0**：纯 `Reducer` → `Void`；Middleware 返回 `Effect`；`@M
 | [STRICT_CONCURRENCY_MIGRATION.md](./STRICT_CONCURRENCY_MIGRATION.md) | Swift 6 并发边界 |
 | [WHY_REDUX_ADOPTION.md](./WHY_REDUX_ADOPTION.md) | 为何采用轻量 Redux |
 
-Demo 对照：`Examples/TGReduxKitDemo`（`ShoppingDependencies` + middleware 工厂）。
+Demo 对照：`Examples/TGReduxKitDemo`（Composition Root → 各 Middleware 工厂参数）。

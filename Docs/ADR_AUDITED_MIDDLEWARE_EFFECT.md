@@ -24,7 +24,7 @@
 
 ### Dependency injection
 
-无 DI 容器。见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md) 与 Demo `ShoppingDependencies`。
+无 DI 容器。见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md)；Demo 在 Composition Root 直接调用各 Middleware 工厂。
 
 ### Supersedes
 

@@ -36,13 +36,14 @@ struct MockSearch: ProductSearching {
     }
 }
 
-let middlewares = makeShoppingMiddlewares(
-    dependencies: ShoppingDependencies(productSearch: MockSearch())
-)
 let store = Store(
     initialState: ShoppingState(),
     reducer: shoppingReducer,
-    middlewares: middlewares
+    middlewares: [
+        makeCatalogSearchMiddleware(productSearch: MockSearch()),
+        makeFeatureFlagsMiddleware(featureFlags: LiveFeatureFlagService()),
+        makeAsyncLabMiddleware()
+    ]
 )
 store.dispatch(.catalog(.searchQueryChanged("pad")))
 // 短暂等待 Effect 完成后再断言 state
