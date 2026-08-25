@@ -1,5 +1,7 @@
 # TGReduxKitDemo
 
+> 对照 **TGReduxKit 5.0**：纯 Reducer + Middleware→Effect + 工厂 DI。
+
 | Piece | Role |
 |-------|------|
 | `Shopping` SPM | Models、纯 Reducer、Middleware 工厂、服务协议 — 无 MainActor 默认 |

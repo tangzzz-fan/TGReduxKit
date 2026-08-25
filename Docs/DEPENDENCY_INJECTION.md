@@ -1,5 +1,7 @@
 # 依赖注入（无 DI 容器）
 
+> **5.0.0 现行**。与源码 / Demo `ShoppingDependencies` 一致。
+
 TGReduxKit **不引入** `DependencyValues` / `@Dependency` 一类运行时注册表。依赖管理仍是架构必要部分，但只用 Swift **闭包捕获** + **工厂函数** + **Composition Root 组装**。
 
 ## 分层规则

@@ -1,45 +1,60 @@
 # Migrating from TGReduxKit 4.x to 5.0
 
-5.0 is an architectural rewrite (industrial compromise): **nonisolated `Reducer` → streaming `Effect`**, **`@MainActor @Observable` `Store`**, domain code in a non-MainActor SPM target.
+> **现行**：5.0.0 定稿为「纯 Reducer + Middleware→Effect」。以下迁移说明对应当前源码。
 
-See also `Docs/ADR_INDUSTRIAL_COMPROMISE.md`.
+5.0 is an architectural rewrite (**audited Middleware + Effect**):
+
+- Pure nonisolated `Reducer` → `Void`
+- Middleware returns declarative `Effect`
+- Single `@MainActor @Observable` `Store`
+- Dependencies via **factory closures** (no DI container / `DependencyValues`)
+
+Canonical ADR: `Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md`. DI: `Docs/DEPENDENCY_INJECTION.md`.
 
 ## Module imports
 
 | 4.x | 5.0 |
 |-----|-----|
-| `import TGReduxKit` | Still works via umbrella (Core+Runtime+UI) |
-| — | Or import `TGReduxKitCore` / `TGReduxKitRuntime` / `TGReduxKitUI` separately |
+| `import TGReduxKit` | Still works via umbrella (Core+Runtime+UI+Debug) |
+| — | Or import `TGReduxKitCore` / `TGReduxKitRuntime` / `TGReduxKitUI` / `TGReduxKitDebug` separately |
 
-## Reducer
+## Reducer — keep pure
 
 ```swift
-// 4.x
-let reducer: Reducer<State, Action> = { state, action in
+// 4.x — sync reducer (same shape for state updates)
+let reducer: Reducer<AppState, AppAction> = { state, action in
   state.count += 1
 }
 
-// 5.0 — sync only
-let reducer = Reducer<State, Action>.sync { state, action in
+// 5.0 — still Void; never return Effect from the reducer
+let reducer: Reducer<AppState, AppAction> = { state, action in
   state.count += 1
-}
-
-// 5.0 — with effects (capture services in the factory; no DependencyContext param)
-func makeReducer(fetch: @escaping @Sendable () async throws -> User) -> Reducer<State, Action> {
-  Reducer { state, action in
-    switch action {
-    case .load:
-      return .run { send in
-        await send(.loaded(try await fetch()))
-      }
-    default:
-      return .none
-    }
-  }
 }
 ```
 
-`Reducer` is a **nonisolated value type**. Do not mark it `@MainActor`.
+Do **not** call `Date()` / `UUID()` / network APIs inside the reducer. Put those values on the `Action`, supplied by Middleware or the View.
+
+## Effects — move into Middleware factories
+
+```swift
+// 4.x — often middleware owned Tasks via store.runTask / debounce helpers
+// 5.0 — middleware returns Effect; Store runs and cancels by CancellationID
+
+func makeSearchMiddleware(
+  search: @escaping @Sendable (String) async -> [Product]
+) -> Middleware<AppState, AppAction> {
+  { _, action, next in
+    let base = next(action)
+    guard case .queryChanged(let q) = action else { return base }
+    return .merge(
+      base,
+      .debounce(id: "search", delay: .milliseconds(300)) {
+        .searchCompleted(await search(q))
+      }
+    )
+  }
+}
+```
 
 ## Store / UI
 
@@ -48,16 +63,38 @@ func makeReducer(fetch: @escaping @Sendable () async throws -> User) -> Reducer<
 let store = Store(initialState:..., reducer:..., middlewares: [...])
 store.dispatch(.increment)
 
-// 5.0 — MainActor observable root (ObservableStore is a typealias)
-let store = Store(initialState: State(), reducer: reducer)
-_ = store.dispatch(.increment)           // returns Task? — discard or cancel
-await store.dispatchAndWait(.load)       // optional await of scheduled work
+// 5.0 — same composition shape; Store is @MainActor @Observable
+@SwiftUI.State var store = Store(
+  initialState: AppState(),
+  reducer: appReducer,
+  middlewares: [
+    makeSearchMiddleware(search: LiveSearch().run),
+    actionLoggingMiddleware { print($0) }
+  ]
+)
+store.dispatch(.queryChanged("tea"))
 ```
 
-## Middleware → Effect
+Qualify `@SwiftUI.State` when the `State` protocol is in scope.
 
-Onion Middleware is removed as the primary async path. Return `Effect` from the reducer instead.
+## Dependency injection
+
+| Do | Don't |
+|----|--------|
+| Inject at Composition Root into middleware factories | Put `APIClient` on `Store` |
+| Capture `Sendable` services in Effect closures | Use a global `DependencyValues` registry |
+| Pass mocks into factories in tests / Previews | Call live networking from the reducer |
+
+Demo reference: `ShoppingDependencies` + `makeShoppingMiddlewares(dependencies:)`.
 
 ## Domain isolation
 
-Keep State/Action/reducers in an SPM target **without** `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (see Demo `Shopping`).
+Keep State / Action / models in an SPM target **without** `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` when the app target defaults to MainActor (see Demo `Shopping`).
+
+## Removed / superseded from interim 5.0 drafts
+
+If you adopted an early 5.0 preview (`actor Store` + `ObservableStore`, or `Reducer` returning `Effect` / `DependencyContext`):
+
+1. Collapse to one `@MainActor` `Store`.
+2. Move effects out of the reducer into Middleware factories.
+3. Replace `DependencyKey` / `withDependencies` with factory parameters.

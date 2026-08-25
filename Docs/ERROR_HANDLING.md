@@ -1,56 +1,39 @@
 # 错误处理指南
 
-## 模式一：Middleware 内 catch → dispatch 错误 Action
+异步失败在 Middleware / Effect 闭包里 catch，转成显式 Action；Reducer 只写状态。
 
-直接在 middleware 的 `runTask(catching:)` 中将错误转为 action：
+## 模式一：Effect 内 catch → 失败 Action
 
 ```swift
-let userMiddleware: Middleware<AppState, AppAction> = { store, action, next in
-    next(action)
-
-    guard case .loadUser = action else { return }
-
-    store.runTask(id: "load-user", catching: { error in
-        .user(.loadFailed(error.localizedDescription))
-    }) {
-        let user = try await userRepository.fetchUser()
-        await store.dispatch(.user(.loaded(user)))
+func makeUserMiddleware(repo: UserRepository) -> Middleware<AppState, AppAction> {
+    { _, action, next in
+        let base = next(action)
+        guard case .loadUser = action else { return base }
+        return .merge(
+            base,
+            .task(id: "load-user") {
+                do { return .userLoaded(try await repo.fetchUser()) }
+                catch { return .userLoadFailed(error.localizedDescription) }
+            }
+        )
     }
 }
 ```
 
-## 模式二：全局错误上报
+## 模式二：全局上报
 
-使用 `errorReportingMiddleware` 将所有匹配的错误 action 上报到日志/分析服务：
+挂载 `errorReportingMiddleware`，从 Action 抽出错误信息上报（不 catch 异步 throws）：
 
 ```swift
-let store = Store(
-    initialState: AppState(),
-    reducer: appReducer,
-    middlewares: [
-        // Feature middleware...
-        errorReportingMiddleware(
-            extract: { action in
-                if case .user(.loadFailed(let msg)) = action {
-                    return (NSError(domain: "App", code: 0, userInfo: [NSLocalizedDescriptionKey: msg]), "user")
-                }
-                if case .catalog(.searchFailed(let msg)) = action {
-                    return (NSError(domain: "App", code: 0, userInfo: [NSLocalizedDescriptionKey: msg]), "catalog")
-                }
-                return nil
-            },
-            reporter: { error, source in
-                CrashReporter.log(error, source: source)
-            }
-        ),
-    ]
+errorReportingMiddleware(
+    extract: { action in
+        if case .userLoadFailed(let message) = action {
+            return (SimpleError(message), "user")
+        }
+        return nil
+    },
+    reporter: { error, source in analytics.report(error, source: source) }
 )
 ```
 
-## 推荐组合
-
-| 场景 | 推荐 |
-|------|------|
-| 业务错误恢复 | 模式一（`runTask(catching:)` — 错误回流为 action） |
-| 全局日志/监控 | 模式二（`errorReportingMiddleware` — 拦截上报） |
-| 两者都需要 | 叠加使用：先 catching 回流，再 middleware 上报 |
+Demo / Debug product：`TGReduxKitDebug`。

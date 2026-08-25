@@ -5,17 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **现行文档**以 `Docs/README.md` 为准。下方 ≤4.x 条目中的文件名可能已删除，仅作历史记录。
+
 ## [Unreleased]
 
+## [5.0.0] - 2026-08-25
+
 ### Added
-- **Audited architecture**: pure `Reducer` → `Void`; Middleware returns `Effect` (`task` / `cancel` / `indirect merge`); `@MainActor` `Store` + `ScopedStore`; `TGReduxKitDebug`.
-- Swift Testing suites in `AuditedArchitectureTests.swift`.
-- Docs: `ADR_AUDITED_MIDDLEWARE_EFFECT.md`, `DEPENDENCY_INJECTION.md`.
-- Demo: `ShoppingDependencies` + middleware factories (closure DI, no container).
+- **Products**: 拆分 `TGReduxKitCore` / `TGReduxKitRuntime` / `TGReduxKitUI` / `TGReduxKitDebug` / `TGReduxKitTesting`；umbrella `TGReduxKit` re-export。
+- **Core**: 声明式 `Effect`（`task` / `cancel` / `indirect merge` / `debounce` / `fireAndForget`）与 `CancellationID`。
+- **Runtime**: Middleware 返回 `Effect`；`Store` 解释执行并管理 `managedTasks`；`ScopedStore` + `StoreType`。
+- **Debug**: `actionLoggingMiddleware` / `stateDiffMiddleware` / `errorReportingMiddleware`。
+- **Docs（现行）**: `ADR_AUDITED_MIDDLEWARE_EFFECT`、`DEPENDENCY_INJECTION`、`EFFECT_GUIDE`、`MIGRATION_4_TO_5` 等（见 `Docs/README.md`）。
+- **Demo**: `Shopping` 模块 + `ShoppingDependencies` middleware 工厂（闭包 DI）；Composition Root 组装。
+- **Tests**: Swift Testing 套件 `AuditedArchitectureTests`（非 XCTest）。
 
 ### Changed
-- **Breaking**: Reducer no longer returns `Effect` (effects come from Middleware).
-- **Breaking**: Protocols renamed to `State` / `Action` (qualify `@SwiftUI.State` at UI call sites).
+- **Breaking / Architecture**: 定稿为「纯 Reducer + Middleware→Effect」：
+  - `Reducer` = `(inout State, Action) -> Void`（非隔离、纯函数，不返回 Effect）。
+  - 副作用只经由 Middleware 工厂注入依赖并返回 `Effect`；`Store` 不持有业务依赖。
+  - `@MainActor @Observable` 单一 `Store`（不再使用 `actor Store` + 独立 `ObservableStore` 双层）。
+- **Breaking / Protocols**: 公开协议命名为 `State` / `Action`（与 SwiftUI 冲突时在 UI 使用 `@SwiftUI.State`）。
+- **Breaking / DI**: 不引入 `DependencyValues` / `@Dependency`；依赖用 Middleware 工厂参数 + 闭包捕获（见 `DEPENDENCY_INJECTION.md`）。
+- **Docs**: README / ARCHITECTURE / 实践指南全部按 5.0 源码重写；删除三角架构 / industrial / DependencyContext / 时间旅行等过时文稿。
+- **Demo**: 价格展示改用 `FormatStyle` `.currency`，消除 `Decimal` 本地化插值 deprecation。
+
+### Removed
+- **Breaking**: 4.x 以 `runTask` 为主路径的副作用模型，以及短暂试验过的「Reducer 返回 Effect / `DependencyContext` / `ObservableStore` 投影」API。
+- **Docs**: 移除历史 ADR 草案、0825 review 原稿、评分卡、Time Travel / 多 Feature 旧指南等（CHANGELOG 历史条目仍保留当时说明，勿再当作现行文档）。
+
+### Migration
+- 见 [Docs/MIGRATION_4_TO_5.md](Docs/MIGRATION_4_TO_5.md)。SPM: `.package(..., from: "5.0.0")`。
 
 ## [4.0.1] - 2026-08-25
 

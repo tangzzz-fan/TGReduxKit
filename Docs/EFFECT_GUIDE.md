@@ -1,67 +1,64 @@
-# Effect Guide (5.x industrial compromise)
+# Effect Guide (5.0)
 
-`Effect` is returned from a nonisolated `Reducer`. The `@MainActor` `Store` owns scheduling, cancellation, and follow-up `dispatch` via `Send`.
+`Effect` is a **declarative** description. Middleware returns it; `@MainActor` `Store` interprets and runs it. Reducers never return effects.
 
 ## Mental model
 
 ```text
-Action → Reducer (sync state + return Effect)
-      → Store.run(Effect)
-      → send(Action)* → dispatch again
+Action → Middleware → next → Reducer (sync state)
+                    ↘ return Effect
+Store.run(Effect) → optional follow-up Action → dispatch
 ```
 
 ## Creating effects
 
 ```swift
-// None
-return .none
+Effect<AppAction>.none()
 
-// Multi-value (preferred for progress / streams)
-return .run(id: "search") { send in
-    await send(.searching)
-    let results = try await api.search(query)
-    await send(.completed(results))
+Effect.task(id: "load") {
+    .loaded(await api.fetch())
 }
 
-// Single follow-up convenience
-return .run(id: "load", producing: {
-    .loaded(try await api.fetch())
-})
+Effect.cancel(id: "load")
 
-return .cancel(id: "search")
-return .merge(effectA, effectB)
+Effect.merge(downstream, fetchEffect)
+
+Effect.debounce(id: "search", delay: .milliseconds(300)) {
+    .searchCompleted(await search(query))
+}
+
+Effect.fireAndForget {
+    await analytics.track("opened")
+}
 ```
 
-## Operators
+Same `CancellationID` on a new `.task` **replaces** the previous task (latest-wins). `.cancel(id:)` stops it; `Task.isCancelled` should be checked in long loops.
 
-| API | Behavior |
-|-----|----------|
-| `.cancellable(id:)` | Sets/replaces the cancellation id |
-| `.debounce(for:)` | Sleeps before work (pair with stable id) |
-| `.throttle(for:)` | Runs work then sleeps |
-| `.map` | Used by `pullback` |
-
-## Dependencies
-
-**Do not** inject services through Store/`DependencyContext` into every reduce. Capture `@Sendable` closures in the reducer factory:
+## Middleware shape
 
 ```swift
-func makeUserReducer(fetch: @escaping @Sendable () async throws -> User) -> Reducer<State, Action> {
-    Reducer { state, action in
-        switch action {
-        case .load:
-            return .run { send in
-                await send(.loaded(try await fetch()))
+func makeAPIMiddleware(api: APIClient) -> Middleware<AppState, AppAction> {
+    { _, action, next in
+        let base = next(action)
+        guard case .fetchUser(let id) = action else { return base }
+        return .merge(
+            base,
+            .task(id: "fetch-user") {
+                do { return .userLoaded(try await api.fetchUser(id: id)) }
+                catch { return .loadFailed(error) }
             }
-        default:
-            return .none
-        }
+        )
     }
 }
 ```
 
-`DependencyContext` remains available for app-owned bags if you want them — it is not part of the reduce signature.
+Capture `@Sendable` dependencies in the factory — do not put them on `Store`. See [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md).
 
-## Testing
+## Race (problem A) vs cancel (problem B)
 
-`TestStore.send` records effects without running them. Assert structure; optionally `await runEffects()` on MainActor.
+| | Question | Mechanism |
+|--|----------|-----------|
+| **A** | Old async results polluting state? | Same effect `id` → previous task cancelled; optionally guard in reducer with request token / query |
+| **B** | Lifecycle / teardown? | `.cancel(id:)` or Store deinit clearing `managedTasks` |
+
+Prefer effect IDs for IO that must be latest-wins (search, refresh). Use reducer guards when multiple independent streams share state.

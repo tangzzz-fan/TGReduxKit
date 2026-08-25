@@ -30,4 +30,5 @@ Tests use **Swift Testing** (`@Test` / `#expect`), not XCTest.
 
 ## Docs
 
-- `Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md`
+- Index: `Docs/README.md`（仅现行 5.0；勿引用已删除的三角 / industrial ADR）
+- `Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md` · `Docs/DEPENDENCY_INJECTION.md`

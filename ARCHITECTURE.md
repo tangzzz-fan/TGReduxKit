@@ -1,17 +1,19 @@
 # Architecture (5.0)
 
-TGReduxKit uses a triangular architecture:
+Audited Middleware + Effect:
 
-1. **TGReduxKitCore** — nonisolated domain (`Reducer`, `Effect`, `DependencyContext`)
-2. **TGReduxKitRuntime** — `actor Store` (state + effect runner)
-3. **TGReduxKitUI** — `ObservableStore` MainActor projection for SwiftUI
-
-See [Docs/ADR_TRIANGULAR_ARCHITECTURE.md](Docs/ADR_TRIANGULAR_ARCHITECTURE.md) for the full decision record.
+1. **TGReduxKitCore** — nonisolated `State` / `Action` / pure `Reducer` (`Void`) / `Effect`
+2. **TGReduxKitRuntime** — `@MainActor @Observable` `Store`; Middleware returns `Effect`
+3. **TGReduxKitUI** — `provideStore` / `binding`
+4. **TGReduxKitDebug** — logging / diff / error-reporting middleware
 
 ```text
-View → ObservableStore.dispatch
-    → await Store.dispatch
-    → Reducer → Effect
-    → run Effect → optional Action → dispatch
-    → MainActor update ObservableStore.state
+View → Store.dispatch
+    → Middleware onion (each returns Effect)
+    → Reducer (inout State)
+    → Store runs Effect (task / cancel / merge)
+    → follow-up Action → dispatch again
 ```
+
+Full ADR: [Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md](Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md).  
+DI: [Docs/DEPENDENCY_INJECTION.md](Docs/DEPENDENCY_INJECTION.md).

@@ -1,57 +1,65 @@
 # TGReduxKit
 
-轻量 Redux for SwiftUI（iOS 17+），Swift 6 三角架构：
+轻量 Redux for SwiftUI（iOS 17+）— **5.0**
 
-**领域纯函数（非隔离） + `actor` 状态容器 + Effect 副作用**
+**纯 Reducer（`Void`）+ Middleware → `Effect` + `@MainActor @Observable` `Store`**
 
-框架扛起隔离责任；业务 `State` / `Action` / `Reducer` 无需标注 `nonisolated`。
+领域 `State` / `Action` / `Reducer` 保持非隔离纯函数；副作用与依赖只在 Middleware 边界注入（无 DI 容器）。
 
 ## 架构
 
 ```mermaid
 flowchart LR
-  View --> ObservableStore
-  ObservableStore -->|await dispatch| StoreActor
-  StoreActor --> Reducer
-  Reducer --> Effect
-  Effect -->|follow-up Action| StoreActor
-  StoreActor -->|MainActor hop| ObservableStore
+  View --> Store
+  Store --> Middleware
+  Middleware -->|Effect| Store
+  Middleware -->|next| Reducer
+  Reducer -->|inout State| Store
+  Effect -->|follow-up Action| Store
 ```
 
 | Product | 职责 |
 |---------|------|
-| `TGReduxKitCore` | `Reducer`、`Effect`、`DependencyContext`、组合器 |
-| `TGReduxKitRuntime` | `actor Store`、Effect 调度 |
-| `TGReduxKitUI` | `ObservableStore`、SwiftUI 注入 |
-| `TGReduxKitTesting` | `TestStore` |
-| `TGReduxKit` | Umbrella re-export（Core+Runtime+UI） |
+| `TGReduxKitCore` | `State` / `Action` / 纯 `Reducer` / `Effect` / `CancellationID` |
+| `TGReduxKitRuntime` | `@MainActor` `Store`、Middleware→Effect、`ScopedStore` |
+| `TGReduxKitUI` | `provideStore` / `binding` |
+| `TGReduxKitDebug` | logging / state-diff / error-reporting |
+| `TGReduxKitTesting` | `TestStore`（纯 Reducer） |
+| `TGReduxKit` | Umbrella（Core+Runtime+UI+Debug） |
 
-详见 [Docs/ADR_TRIANGULAR_ARCHITECTURE.md](Docs/ADR_TRIANGULAR_ARCHITECTURE.md)。
+- 架构：[ARCHITECTURE.md](ARCHITECTURE.md) · [Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md](Docs/ADR_AUDITED_MIDDLEWARE_EFFECT.md)
+- DI：[Docs/DEPENDENCY_INJECTION.md](Docs/DEPENDENCY_INJECTION.md)
 
 ## 快速开始
 
 ```swift
 import TGReduxKit
 
-struct AppState: Sendable { var count = 0 }
-enum AppAction: Sendable { case increment, saved }
+struct AppState: Equatable, Sendable, State { var count = 0 }
+enum AppAction: Sendable, Action { case increment, load, loaded(Int) }
 
-let reducer = Reducer<AppState, AppAction> { state, action, _ in
+let reducer: Reducer<AppState, AppAction> = { state, action in
     switch action {
-    case .increment:
-        state.count += 1
-        return .run {
-            try await Task.sleep(for: .milliseconds(100))
-            return .saved
-        }
-    case .saved:
-        return .none
+    case .increment: state.count += 1
+    case .loaded(let value): state.count = value
+    case .load: break
     }
 }
 
-// SwiftUI
-@State var store = ObservableStore(initialState: AppState(), reducer: reducer)
-// store.dispatch(.increment)
+func makeLoadMiddleware(fetch: @escaping @Sendable () async -> Int) -> Middleware<AppState, AppAction> {
+    { _, action, next in
+        let base = next(action)
+        guard case .load = action else { return base }
+        return .merge(base, .task { .loaded(await fetch()) })
+    }
+}
+
+// Composition Root
+@SwiftUI.State var store = Store(
+    initialState: AppState(),
+    reducer: reducer,
+    middlewares: [makeLoadMiddleware(fetch: { 42 })]
+)
 ```
 
 ## 安装
@@ -61,20 +69,17 @@ let reducer = Reducer<AppState, AppAction> { state, action, _ in
 ```
 
 ```swift
-dependencies: [
-  .product(name: "TGReduxKit", package: "TGReduxKit")
-]
+.product(name: "TGReduxKit", package: "TGReduxKit")
 ```
-
-## 从 4.x 迁移
-
-见 [Docs/MIGRATION_4_TO_5.md](Docs/MIGRATION_4_TO_5.md)。
 
 ## 文档
 
-- [Docs/README.md](Docs/README.md) — 文档索引
-- [Docs/ADR_TRIANGULAR_ARCHITECTURE.md](Docs/ADR_TRIANGULAR_ARCHITECTURE.md)
-- [CHANGELOG.md](CHANGELOG.md)
+| 文档 | 说明 |
+|------|------|
+| [Docs/README.md](Docs/README.md) | 索引（仅现行 5.0） |
+| [Docs/MIGRATION_4_TO_5.md](Docs/MIGRATION_4_TO_5.md) | 4.x → 5.0 |
+| [Docs/EFFECT_GUIDE.md](Docs/EFFECT_GUIDE.md) | Effect / 取消 / 竞态 |
+| [CHANGELOG.md](CHANGELOG.md) | 版本记录 |
 
 ## 要求
 

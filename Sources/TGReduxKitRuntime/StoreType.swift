@@ -1,7 +1,7 @@
 import Observation
 import TGReduxKitCore
 
-/// Minimal surface for Views. Async APIs (`runTask` / `cancelTask`) stay on root `Store`.
+/// Minimal surface for Views. Effect scheduling / cancellation stay on root `Store`.
 @MainActor
 public protocol StoreType<State, Action>: AnyObject, Observable {
     associatedtype State
