@@ -8,18 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Architecture 5.0 (triangular)**: domain pure `Reducer` + `actor Store` + `Effect` system.
-  - Products: `TGReduxKitCore`, `TGReduxKitRuntime`, `TGReduxKitUI`, `TGReduxKitTesting`, umbrella `TGReduxKit`.
-  - `DependencyContext` injected into every reduce, with lightweight `DependencyKey` / typed subscript for app services.
-  - `ObservableStore` (`@MainActor @Observable`) projects actor state for SwiftUI; forwards `withDependencies`.
-  - Docs: `ADR_TRIANGULAR_ARCHITECTURE.md`, `MIGRATION_4_TO_5.md`, `EFFECT_GUIDE.md`, `ARCHITECTURE_DI_AND_SHOPPING_MODULE.md`, review union notes.
+- **Architecture 5.0 (industrial compromise)**:
+  - `@MainActor @Observable` `Store` (SwiftUI-sync root); `ObservableStore` typealias.
+  - Nonisolated `Reducer` returns streaming `Effect` via `Send` (multi-value); no Middleware primary path.
+  - `dispatch` → `Task<Void, Never>?` for optional caller cancellation.
+  - Optional `DependencyKey` bag (not injected into reduce).
+  - Docs: `ADR_INDUSTRIAL_COMPROMISE.md`, counterexample verification suite.
 
 ### Changed
-- **Breaking**: `Reducer` is a nonisolated `struct` returning `Effect`; no longer `@MainActor` function typealias.
-- **Breaking**: Runtime `Store` is an `actor`; UI uses `ObservableStore`.
-- **Breaking**: Onion `Middleware` is no longer the primary async path; use `Effect` from reducers.
-- **Breaking**: `State` / `Action` must be `Sendable`.
-- Demo: single `Shopping` module (no Domain/Feature split); services via `DependencyKey` function values instead of `ShoppingDependencies` protocols.
+- **Breaking**: Runtime `Store` is `@MainActor` class (not `actor`); remove actor→UI projection hop as the primary model.
+- **Breaking**: `Reducer` signature is `(inout State, Action) -> Effect` (no `DependencyContext` parameter).
+- **Breaking**: `Effect.run` is `send`-based; use `.run(producing:)` for single follow-up.
+- Demo `Shopping` captures service closures in `makeShoppingReducer`.
 
 ### Removed
 - 4.x Middleware pipeline, `ScopedStore`, Store-level `runTask`/`debounce`/`throttle`/`timeout` API surface, and in-tree time-travel UI (first 5.0 cut).

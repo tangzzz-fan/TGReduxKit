@@ -1,10 +1,10 @@
 import Foundation
 import TGReduxKit
 
-// MARK: - Dependency keys (function values — no protocol bag)
+// MARK: - Live service closures (captured by reducer factory — not DependencyContext)
 
-private enum ProductSearchKey: DependencyKey {
-    static let liveValue: @Sendable (String, [Product]) async -> [Product] = { query, products in
+public enum ShoppingServices {
+    public static let searchProducts: @Sendable (String, [Product]) async -> [Product] = { query, products in
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else { return products }
         return products.filter { product in
@@ -12,15 +12,12 @@ private enum ProductSearchKey: DependencyKey {
                 || product.description.localizedCaseInsensitiveContains(normalizedQuery)
         }
     }
-}
 
-private enum FeatureFlagsKey: DependencyKey {
-    static let liveValue: @Sendable () async -> FeatureFlagSnapshot = {
+    public static let fetchFeatureFlags: @Sendable () async -> FeatureFlagSnapshot = {
         await FeatureFlagVariants.next()
     }
 }
 
-/// Demo feature-flag remote stand-in (cycles two snapshots).
 private actor FeatureFlagVariants {
     private static let shared = FeatureFlagVariants()
     private var nextVariantIndex = 0
@@ -48,17 +45,5 @@ private actor FeatureFlagVariants {
         nextVariantIndex += 1
         try? await Task.sleep(for: .milliseconds(500))
         return snapshot
-    }
-}
-
-extension DependencyContext {
-    public var searchProducts: @Sendable (String, [Product]) async -> [Product] {
-        get { self[ProductSearchKey.self] }
-        set { self[ProductSearchKey.self] = newValue }
-    }
-
-    public var fetchFeatureFlags: @Sendable () async -> FeatureFlagSnapshot {
-        get { self[FeatureFlagsKey.self] }
-        set { self[FeatureFlagsKey.self] = newValue }
     }
 }

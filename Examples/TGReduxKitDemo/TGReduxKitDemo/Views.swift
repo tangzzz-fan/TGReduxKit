@@ -6,7 +6,7 @@ import Shopping
 // MARK: - Product List
 
 struct ProductListView: View {
-    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
+    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
 
     var body: some View {
         List {
@@ -81,7 +81,7 @@ struct ProductListView: View {
 
 struct ProductDetailView: View {
     let productID: UUID
-    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
+    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
 
     var product: Product? {
         store.state.product(for: productID)
@@ -153,7 +153,7 @@ struct ProductDetailView: View {
 // MARK: - Cart View
 
 struct CartView: View {
-    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
+    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
 
     var body: some View {
         List {
@@ -186,7 +186,7 @@ struct CartView: View {
 }
 
 struct FeatureFlagStatusCard: View {
-    @Environment(ObservableStore<ShoppingState, ShoppingAction>.self) private var store
+    @Environment(Store<ShoppingState, ShoppingAction>.self) private var store
 
     private var enabledFlags: [String] {
         let snapshot = store.state.featureFlags.snapshot

@@ -1,6 +1,8 @@
 # Migrating from TGReduxKit 4.x to 5.0
 
-5.0 is an architectural rewrite: **domain pure functions + actor Store + Effect**.
+5.0 is an architectural rewrite (industrial compromise): **nonisolated `Reducer` → streaming `Effect`**, **`@MainActor @Observable` `Store`**, domain code in a non-MainActor SPM target.
+
+See also `Docs/ADR_INDUSTRIAL_COMPROMISE.md`.
 
 ## Module imports
 
@@ -17,14 +19,23 @@ let reducer: Reducer<State, Action> = { state, action in
   state.count += 1
 }
 
-// 5.0
+// 5.0 — sync only
 let reducer = Reducer<State, Action>.sync { state, action in
   state.count += 1
 }
-// or with effects:
-let reducer = Reducer<State, Action> { state, action, dependencies in
-  state.count += 1
-  return .run { .finish }
+
+// 5.0 — with effects (capture services in the factory; no DependencyContext param)
+func makeReducer(fetch: @escaping @Sendable () async throws -> User) -> Reducer<State, Action> {
+  Reducer { state, action in
+    switch action {
+    case .load:
+      return .run { send in
+        await send(.loaded(try await fetch()))
+      }
+    default:
+      return .none
+    }
+  }
 }
 ```
 
@@ -37,43 +48,16 @@ let reducer = Reducer<State, Action> { state, action, dependencies in
 let store = Store(initialState:..., reducer:..., middlewares: [...])
 store.dispatch(.increment)
 
-// 5.0 Runtime actor
-let store = Store(initialState:..., reducer:...)
-await store.dispatch(.increment)
-
-// 5.0 SwiftUI
-@State var store = ObservableStore(initialState:..., reducer:...)
-store.dispatch(.increment) // fires Task internally
+// 5.0 — MainActor observable root (ObservableStore is a typealias)
+let store = Store(initialState: State(), reducer: reducer)
+_ = store.dispatch(.increment)           // returns Task? — discard or cancel
+await store.dispatchAndWait(.load)       // optional await of scheduled work
 ```
 
 ## Middleware → Effect
 
-```swift
-// 4.x middleware
-{ store, action, next in
-  next(action)
-  store.runTask(id: "search") { ... await store.dispatch(...) }
-}
+Onion Middleware is removed as the primary async path. Return `Effect` from the reducer instead.
 
-// 5.0 inside reducer
-case .searchQueryChanged(let q):
-  return .run(id: "search") {
-    let results = await api.search(q)
-    return .searchCompleted(results)
-  }
-  .debounce(for: .milliseconds(300))
-```
+## Domain isolation
 
-## Removed / replaced
-
-| 4.x | 5.0 |
-|-----|-----|
-| `@MainActor` Reducer / Middleware | Nonisolated Reducer + Effect |
-| Onion Middleware pipeline | Effect returned from reduce |
-| `ScopedStore` | Use root `ObservableStore` + nested state paths (scoped UI helpers may return later) |
-| `Store.runTask` / debounce / throttle on Store | `Effect.run` / `.debounce` / `.throttle` / `.cancel` |
-| Time-travel debug module | Not in 5.0.0 first cut (may return as optional product) |
-
-## Sendable
-
-`State` and `Action` must be `Sendable`. Prefer value types.
+Keep State/Action/reducers in an SPM target **without** `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (see Demo `Shopping`).

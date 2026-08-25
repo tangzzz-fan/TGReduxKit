@@ -6,7 +6,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [ADR_TRIANGULAR_ARCHITECTURE.md](./ADR_TRIANGULAR_ARCHITECTURE.md) | 三角架构决策 |
+| [ADR_INDUSTRIAL_COMPROMISE.md](./ADR_INDUSTRIAL_COMPROMISE.md) | **现行** MainActor Store + 流式 Effect 决策 |
+| [ADR_TRIANGULAR_ARCHITECTURE.md](./ADR_TRIANGULAR_ARCHITECTURE.md) | 早期三角 actor-Store 草案（已被工业妥协修订） |
 | [MIGRATION_4_TO_5.md](./MIGRATION_4_TO_5.md) | 4.x → 5.0 迁移 |
 | [EFFECT_GUIDE.md](./EFFECT_GUIDE.md) | Effect 创建、取消、debounce/throttle |
 | [DEFAULT_ACTOR_ISOLATION_AND_REDUX.md](./DEFAULT_ACTOR_ISOLATION_AND_REDUX.md) | 为何不再需要领域 `nonisolated` |
@@ -26,6 +27,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [ARCHITECTURE_COUNTEREXAMPLES.md](./ARCHITECTURE_COUNTEREXAMPLES.md) | 六组架构反例 vs 5.0 正向/负向验证 |
 | [ARCHITECTURE_DI_AND_SHOPPING_MODULE.md](./ARCHITECTURE_DI_AND_SHOPPING_MODULE.md) | DependencyContext 统一注入 + Demo `Shopping` 模块：优点 / 缺点 / 否决方案 |
 | [0825_reviews_01.md](./0825_reviews_01.md) / [0825_reviews_02.md](./0825_reviews_02.md) | 原始 review 文稿 |
 | [ASYNC_RACE_AND_CANCELLATION.md](./ASYNC_RACE_AND_CANCELLATION.md) | 异步竞态（Effect 调度仍适用 latest-wins） |

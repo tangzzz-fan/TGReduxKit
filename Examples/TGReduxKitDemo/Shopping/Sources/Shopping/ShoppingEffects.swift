@@ -7,16 +7,16 @@ public enum ShoppingEffectID {
     public static let featureFlags: CancellationID = "feature-flags"
 }
 
-/// Effect builders; services come from `DependencyContext`.
+/// Effect builders. Services are `@Sendable` closures captured by the reducer factory.
 public enum ShoppingEffects {
     public static func searchCatalog(
         query: String,
         in products: [Product],
         search: @escaping @Sendable (String, [Product]) async -> [Product]
     ) -> Effect<CatalogAction> {
-        .run(id: ShoppingEffectID.catalogSearch) {
+        .run(id: ShoppingEffectID.catalogSearch) { send in
             let results = await search(query, products)
-            return .searchCompleted(query, results)
+            await send(.searchCompleted(query, results))
         }
         .debounce(for: .milliseconds(300))
     }
@@ -25,9 +25,9 @@ public enum ShoppingEffects {
         fetch: @escaping @Sendable () async -> FeatureFlagSnapshot,
         now: @escaping @Sendable () -> Date
     ) -> Effect<FeatureFlagsAction> {
-        .run(id: ShoppingEffectID.featureFlags) {
+        .run(id: ShoppingEffectID.featureFlags) { send in
             let snapshot = await fetch()
-            return .loaded(snapshot, now())
+            await send(.loaded(snapshot, now()))
         }
     }
 }
