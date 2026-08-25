@@ -100,7 +100,7 @@ struct ProductDetailView: View {
                     .font(.largeTitle)
                     .bold()
 
-                Text("$\(product.price)")
+                Text(product.price, format: .currency(code: "USD"))
                     .font(.title)
                     .foregroundStyle(.secondary)
 
@@ -162,7 +162,10 @@ struct CartView: View {
                     Text(item.product.name)
                     Spacer()
                     Text("x\(item.quantity)")
-                    Text("$\(item.product.price * Decimal(item.quantity))")
+                    Text(
+                        item.product.price * Decimal(item.quantity),
+                        format: .currency(code: "USD")
+                    )
                 }
             }
             .onDelete { indexSet in
@@ -175,7 +178,7 @@ struct CartView: View {
                         Text("Total")
                             .bold()
                         Spacer()
-                        Text("$\(store.state.cart.totalPrice)")
+                        Text(store.state.cart.totalPrice, format: .currency(code: "USD"))
                             .bold()
                     }
                 }
@@ -300,7 +303,7 @@ struct ProductRowView: View {
                     }
                 }
 
-                Text("$\(product.price)")
+                Text(product.price, format: .currency(code: "USD"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
