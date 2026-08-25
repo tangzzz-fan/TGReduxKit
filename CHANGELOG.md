@@ -9,13 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.1] - 2026-08-25
+
 ### Added
 - **Demo**: Async Lab（长任务 + Cancel；可关 `Task.isCancelled` 演示脏写泄漏）、Feature Flags 模拟失败、搜索清空时 `.cancel`。
 - **Docs**: README / EFFECT_GUIDE 阐明「协作取消 ≠ 无竞态」三层防护。
+- **Demo**: FactoryKit 对接示例（`FactoryDIShoppingAppView`）；启动可选 Manual / Factory 双 Composition Root。
 
 ### Changed
 - **Demo / DI**: 移除 `ShoppingDependencies` 袋与 `makeShoppingMiddlewares`；Composition Root 直接调用各 Middleware 工厂（5.0 推荐）。
-- **Demo / DI**: 并列两套入口 — `ManualDIShoppingAppView`（无框架）与 `FactoryDIShoppingAppView`（FactoryKit 仅在 Root 解析）；Shopping 模块不依赖 Factory。
+- **Demo / DI**: Manual 与 FactoryKit 并列；Shopping 模块不依赖 Factory；`DEPENDENCY_INJECTION.md` 分 A/B 两节说明。
 
 ## [5.0.0] - 2026-08-25
 
