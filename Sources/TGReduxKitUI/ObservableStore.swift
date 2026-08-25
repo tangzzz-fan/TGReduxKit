@@ -36,11 +36,16 @@ public final class ObservableStore<State: Sendable, Action: Sendable> {
     }
 
     public func dispatch(_ action: Action) {
-        Task { await store.dispatch(action) }
+        Task { [weak self] in
+            guard let self else { return }
+            let snapshot = await self.store.dispatch(action)
+            self.state = snapshot
+        }
     }
 
     public func dispatchAndWait(_ action: Action) async {
-        _ = await store.dispatch(action)
+        let snapshot = await store.dispatch(action)
+        self.state = snapshot
     }
 
     public func binding<Value>(
