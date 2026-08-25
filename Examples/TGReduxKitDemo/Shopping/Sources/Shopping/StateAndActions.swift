@@ -1,9 +1,10 @@
 import Foundation
 import TGNavigationStack
+import TGReduxKit
 
 // MARK: - State
 
-public struct ShoppingState: Equatable, Sendable {
+public struct ShoppingState: Equatable, Sendable, State {
     public var catalog: CatalogState
     public var cart: CartState = .init()
     public var featureFlags: FeatureFlagsState = .init()
@@ -34,7 +35,7 @@ public struct ShoppingState: Equatable, Sendable {
     }
 }
 
-public struct CatalogState: Equatable, Sendable {
+public struct CatalogState: Equatable, Sendable, State {
     public var allProducts: [Product]
     public var visibleProducts: [Product]
     public var searchQuery: String = ""
@@ -62,7 +63,7 @@ public struct CatalogState: Equatable, Sendable {
     }
 }
 
-public struct CartState: Equatable, Sendable {
+public struct CartState: Equatable, Sendable, State {
     public var items: [CartItem] = []
 
     public init(items: [CartItem] = []) {
@@ -78,7 +79,7 @@ public struct CartState: Equatable, Sendable {
     }
 }
 
-public struct FeatureFlagsState: Equatable, Sendable {
+public struct FeatureFlagsState: Equatable, Sendable, State {
     public var snapshot: FeatureFlagSnapshot
     public var isLoading: Bool
     public var lastUpdated: Date?
@@ -130,7 +131,7 @@ public enum FeatureFlagLoadSource: String, Equatable, Sendable {
 
 // MARK: - Action
 
-public enum ShoppingAction: Equatable, Sendable {
+public enum ShoppingAction: Equatable, Sendable, Action {
     case catalog(CatalogAction)
     case cart(CartAction)
     case featureFlags(FeatureFlagsAction)
@@ -138,17 +139,17 @@ public enum ShoppingAction: Equatable, Sendable {
     case handleDeepLink(URL)
 }
 
-public enum CatalogAction: Equatable, Sendable {
+public enum CatalogAction: Equatable, Sendable, Action {
     case searchQueryChanged(String)
     case searchCompleted(String, [Product])
 }
 
-public enum CartAction: Equatable, Sendable {
+public enum CartAction: Equatable, Sendable, Action {
     case add(Product)
     case remove(IndexSet)
 }
 
-public enum FeatureFlagsAction: Equatable, Sendable {
+public enum FeatureFlagsAction: Equatable, Sendable, Action {
     case loadRequested(FeatureFlagLoadSource)
     case loaded(FeatureFlagSnapshot, Date)
 }

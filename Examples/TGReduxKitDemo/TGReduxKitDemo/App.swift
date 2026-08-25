@@ -3,12 +3,20 @@ import TGReduxKit
 import TGNavigationStack
 import Shopping
 
-/// Demo shell: `@MainActor @Observable` `Store` is the SwiftUI root.
 public struct ShoppingAppView: View {
-    @State private var store: Store<ShoppingState, ShoppingAction>
+    @SwiftUI.State private var store: Store<ShoppingState, ShoppingAction>
 
-    public init(reducer: Reducer<ShoppingState, ShoppingAction> = shoppingReducer) {
-        _store = State(initialValue: Store(initialState: ShoppingState(), reducer: reducer))
+    public init(
+        reducer: @escaping Reducer<ShoppingState, ShoppingAction> = shoppingReducer,
+        middlewares: [Middleware<ShoppingState, ShoppingAction>] = makeShoppingMiddlewares()
+    ) {
+        _store = SwiftUI.State(
+            initialValue: Store(
+                initialState: ShoppingState(),
+                reducer: reducer,
+                middlewares: middlewares
+            )
+        )
     }
 
     public var body: some View {

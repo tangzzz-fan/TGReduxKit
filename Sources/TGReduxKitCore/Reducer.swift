@@ -1,71 +1,40 @@
 import Foundation
 
-/// A domain reducer. Nonisolated — never bind to a global actor.
-/// Dependencies are captured in the factory (`@Sendable` closures), not injected each reduce.
-public struct Reducer<State: Sendable, Action: Sendable>: Sendable {
-    public let reduce: @Sendable (inout State, Action) -> Effect<Action>
+/// Pure function. Zero actor binding.
+/// Invoked by `Store` on `@MainActor`, but the reducer itself is isolation-agnostic.
+public typealias Reducer<State, Action> = @Sendable (inout State, Action) -> Void
 
-    public init(
-        _ reduce: @escaping @Sendable (inout State, Action) -> Effect<Action>
-    ) {
-        self.reduce = reduce
-    }
-
-    /// State-only reducer with no effects.
-    public static func sync(
-        _ reduce: @escaping @Sendable (inout State, Action) -> Void
-    ) -> Reducer {
-        Reducer { state, action in
-            reduce(&state, action)
-            return .none
-        }
-    }
-
-    public func callAsFunction(
-        _ state: inout State,
-        _ action: Action
-    ) -> Effect<Action> {
-        reduce(&state, action)
-    }
-}
-
-/// Runs reducers left-to-right and merges their effects.
-public func combineReducers<State: Sendable, Action: Sendable>(
+/// Runs reducers left-to-right.
+public func combineReducers<State, Action>(
     _ reducers: Reducer<State, Action>...
 ) -> Reducer<State, Action> {
     combineReducers(Array(reducers))
 }
 
-public func combineReducers<State: Sendable, Action: Sendable>(
+public func combineReducers<State, Action>(
     _ reducers: [Reducer<State, Action>]
 ) -> Reducer<State, Action> {
-    Reducer { state, action in
-        var effects: [Effect<Action>] = []
-        effects.reserveCapacity(reducers.count)
+    { state, action in
         for reducer in reducers {
-            effects.append(reducer.reduce(&state, action))
+            reducer(&state, action)
         }
-        return .merge(effects)
     }
 }
 
-/// Lifts a child reducer, embedding child follow-up actions into the parent.
+/// Lifts a child reducer into a parent state/action pair.
 public func pullback<
-    ChildState: Sendable,
-    ChildAction: Sendable,
-    ParentState: Sendable,
-    ParentAction: Sendable
+    ChildState,
+    ChildAction,
+    ParentState,
+    ParentAction
 >(
-    _ child: Reducer<ChildState, ChildAction>,
+    _ child: @escaping Reducer<ChildState, ChildAction>,
     state keyPath: WritableKeyPath<ParentState, ChildState> & Sendable,
     action embed: @escaping @Sendable (ChildAction) -> ParentAction,
     extract: @escaping @Sendable (ParentAction) -> ChildAction?
 ) -> Reducer<ParentState, ParentAction> {
-    Reducer { parentState, parentAction in
-        guard let childAction = extract(parentAction) else {
-            return .none
-        }
-        let effect = child.reduce(&parentState[keyPath: keyPath], childAction)
-        return effect.map(embed)
+    { parentState, parentAction in
+        guard let childAction = extract(parentAction) else { return }
+        child(&parentState[keyPath: keyPath], childAction)
     }
 }
