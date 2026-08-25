@@ -12,6 +12,7 @@
 		18F0A0012F17E6350088449D /* TGNavigationStack in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0002F17E6350088449D /* TGNavigationStack */; };
 		18F0A0112F17E6350088449D /* Shopping in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0102F17E6350088449D /* Shopping */; };
 		18F0A0132F17E6350088449D /* Shopping in Frameworks */ = {isa = PBXBuildFile; productRef = 18F0A0142F17E6350088449D /* Shopping */; };
+		18FAC0032F4A000100053FDC /* FactoryKit in Frameworks */ = {isa = PBXBuildFile; productRef = 18FAC0022F4A000100053FDC /* FactoryKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 				18F0A0112F17E6350088449D /* Shopping in Frameworks */,
 				182584882F17E6350088449D /* TGReduxKit in Frameworks */,
 				181A97762F17EB0100053FDC /* TGReduxKit in Frameworks */,
+				18FAC0032F4A000100053FDC /* FactoryKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,6 +131,7 @@
 				18F0A0102F17E6350088449D /* Shopping */,
 				182584872F17E6350088449D /* TGReduxKit */,
 				181A97752F17EB0100053FDC /* TGReduxKit */,
+				18FAC0022F4A000100053FDC /* FactoryKit */,
 			);
 			productName = TGReduxKitDemo;
 			productReference = 182584292F17E3260088449D /* TGReduxKitDemo.app */;
@@ -217,6 +220,7 @@
 				181A97742F17EB0100053FDC /* XCLocalSwiftPackageReference "../../../TGReduxKit" */,
 				18F0A0032F17E6350088449D /* XCLocalSwiftPackageReference "../../../TGNavigationStack" */,
 				18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */,
+				18FAC0012F4A000100053FDC /* XCRemoteSwiftPackageReference "Factory" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1825842A2F17E3260088449D /* Products */;
@@ -619,6 +623,17 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		18FAC0012F4A000100053FDC /* XCRemoteSwiftPackageReference "Factory" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hmlongco/Factory";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		181A97752F17EB0100053FDC /* TGReduxKit */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -642,6 +657,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 18F0A0122F17E6350088449D /* XCLocalSwiftPackageReference "Shopping" */;
 			productName = Shopping;
+		};
+		18FAC0022F4A000100053FDC /* FactoryKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 18FAC0012F4A000100053FDC /* XCRemoteSwiftPackageReference "Factory" */;
+			productName = FactoryKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

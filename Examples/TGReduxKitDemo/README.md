@@ -1,36 +1,35 @@
 # TGReduxKitDemo
 
-> 对照 **TGReduxKit 5.0**：纯 Reducer + Middleware→Effect；DI = **工厂参数**（无 `*Dependencies` 袋）。
+> **TGReduxKit 5.0**：纯 Reducer + Middleware→Effect。DI 演示 **两套 Composition Root**。
 
-| Piece | Role |
-|-------|------|
-| `Shopping` SPM | Models、纯 Reducer、服务协议 / live、各 Middleware 工厂 |
-| App | Composition Root：`makeXMiddleware(deps…)` → `Store` |
+## Composition Root（启动后可选）
 
-## 依赖注入（5.0）
+| 入口 | 说明 |
+|------|------|
+| **Manual (no Factory)** | `ManualDIShoppingAppView` — 构造参数直接传入服务 |
+| **FactoryKit** | `FactoryDIShoppingAppView` — `Container` 解析后再交给同一套 `make*Middleware` |
+
+两者共用 `ShoppingStoreBootstrap.makeStore`；Shopping SPM **不依赖** Factory。
 
 ```swift
-// Composition Root — 直接传给工厂，不要 ShoppingDependencies 袋
-ShoppingAppView(
-  productSearch: LiveProductSearchService(),
-  featureFlags: LiveFeatureFlagService(),
-  now: { Date() }
-)
+// A) Manual
+ManualDIShoppingAppView(featureFlags: PreviewFeatureFlagService())
 
-// Preview / test
-ShoppingAppView(featureFlags: PreviewFeatureFlagService())
+// B) Factory — 注册见 DI/Container+Shopping.swift
+Container.shared.featureFlags.register { PreviewFeatureFlagService() }
+FactoryDIShoppingAppView()
 ```
+
+详见仓库 `Docs/DEPENDENCY_INJECTION.md`。
 
 ## 异步流
 
 | Demo | 机制 |
 |------|------|
-| 搜索 | `Effect.debounce` + 清空 `.cancel` + `await` 后 `isCancelled` + Reducer query guard |
-| Feature Flags | `Effect.task`；可模拟 `.loadFailed` |
-| Async Lab | 长任务 + Cancel；开关 Respect `Task.isCancelled` 对比泄漏 |
-
-见仓库 README「取消与竞态」。
+| 搜索 | `debounce` + 清空 `.cancel` + `isCancelled` + query guard |
+| Feature Flags | `task`；可模拟失败 |
+| Async Lab | 长任务 Cancel；Respect `Task.isCancelled` 对比泄漏 |
 
 ## Run
 
-打开 `TGReduxKitDemo.xcodeproj`，本地包：`Shopping`、`TGReduxKit`、`TGNavigationStack`。
+打开 `TGReduxKitDemo.xcodeproj`（已加 SPM：`Factory` → product **FactoryKit**）。

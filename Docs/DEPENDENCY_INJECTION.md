@@ -1,9 +1,7 @@
-# 依赖注入（无 DI 容器）
+# 依赖注入（无框架必选；可选对接 Factory）
 
-> **5.0 现行**：每个 Middleware **工厂函数**在构造时接收自己的依赖；Composition Root 直接组装。  
-> **不要**再建 `*Dependencies` 协议袋（那是 4.x 把一堆服务塞进一个 struct 再往下传的习惯）。
-
-TGReduxKit **不引入** `DependencyValues` / `@Dependency`。只用 Swift **闭包捕获** + **工厂参数** + **Composition Root**。
+> **5.0 现行**：每个 Middleware **工厂函数**在构造时接收自己的依赖；Composition Root 组装。  
+> TGReduxKit **不内置** DI 容器。可用纯参数接线，也可用 [Factory](https://github.com/hmlongco/Factory) 等框架**只在门口解析**。
 
 ## 分层规则
 
@@ -12,55 +10,88 @@ TGReduxKit **不引入** `DependencyValues` / `@Dependency`。只用 Swift **闭
 | **Reducer** | 不允许 | 纯 `(inout State, Action) -> Void` |
 | **Middleware** | 允许且必须 | `makeFooMiddleware(api:)` 参数注入，闭包捕获 |
 | **Effect 闭包** | 允许 | 捕获 Sendable 依赖 |
-| **Store** | 无业务依赖 | 只持有 state / reducer / middlewares 数组 |
+| **Store** | 无业务依赖 | 只持有 state / reducer / middlewares |
+| **DI 框架** | 仅 Composition Root | 解析服务 → 传入 Middleware 工厂；**不要** `@Injected` 进 Reducer |
 
-## Demo：Composition Root 直接接线
+## A) 无 Factory（Demo：`ManualDIShoppingAppView`）
 
 ```text
-ShoppingAppView(productSearch:…, featureFlags:…, now:…)   ← Composition Root
+ManualDIShoppingAppView(productSearch:…, featureFlags:…)
         │
+        ▼
+ShoppingStoreBootstrap.makeStore(…)
         ├─ makeCatalogSearchMiddleware(productSearch:)
         ├─ makeFeatureFlagsMiddleware(featureFlags:now:)
         └─ makeAsyncLabMiddleware()
-                │
-                ▼  各工厂返回的 Middleware 已捕获依赖 → Store(middlewares:)
 ```
 
 ```swift
-// App / Preview — 5.0
-ShoppingAppView()  // live defaults
-
-ShoppingAppView(
-  productSearch: MockSearch(),
-  featureFlags: PreviewFeatureFlagService(),
-  now: { fixedDate }
-)
-
-// 工厂本身（Shopping 模块）
-func makeCatalogSearchMiddleware(productSearch: any ProductSearching) -> Middleware<…> { … }
-func makeFeatureFlagsMiddleware(featureFlags: any FeatureFlagFetching, now: …) -> Middleware<…> { … }
+ManualDIShoppingAppView()
+ManualDIShoppingAppView(featureFlags: PreviewFeatureFlagService())
 ```
 
-- 协议与 live 实现：`Services.swift`（`ProductSearching` / `FeatureFlagFetching`）
-- 测试：对**单个**工厂传入 mock，不必构造依赖袋
+适合：示例、小应用、测试时直接塞 mock。
 
-## Reducer 需要时间 / UUID 时
+## B) 使用 Factory / FactoryKit（Demo：`FactoryDIShoppingAppView`）
 
-不要在 Reducer 里调 `Date()` / `UUID()`。由 Middleware（或 View）写入 Action：
+在 **App 层**注册（`Container+Shopping.swift`），Shopping 模块仍不依赖 Factory：
 
 ```swift
-.task {
-  .loaded(snapshot, now())  // now 由工厂参数捕获
+import FactoryKit
+import Shopping
+
+extension Container {
+    var productSearch: Factory<any ProductSearching> {
+        self { LiveProductSearchService() }
+    }
+    var featureFlags: Factory<any FeatureFlagFetching> {
+        self { LiveFeatureFlagService() }
+    }
+    var now: Factory<@Sendable () -> Date> {
+        self { { Date() } }
+    }
 }
 ```
+
+Composition Root **解析后再交给同一套** Middleware 工厂：
+
+```swift
+FactoryDIShoppingAppView()  // Container.shared.productSearch() 等
+
+// Preview / test override
+Container.shared.featureFlags.register { PreviewFeatureFlagService() }
+FactoryDIShoppingAppView()
+```
+
+```text
+Container.shared ──resolve──► productSearch / featureFlags / now
+        │
+        ▼ 仍调用 ShoppingStoreBootstrap.makeStore(…)
+        │
+        ▼ 与 A 完全相同的 make*Middleware + Store
+```
+
+| 做法 | OK? |
+|------|-----|
+| Root 里 `container.api()` 再 `makeAPIMiddleware(api:)` | ✅ |
+| Middleware 工厂参数捕获服务 | ✅ |
+| `@Injected` / `Container` 写进 Reducer | ❌ |
+| `Store` 持有 `Container` | ❌ |
+
+## Demo 入口
+
+运行 App → **Composition Root** 列表可选 Manual / FactoryKit。两套 UI 与异步 Demo 相同。
+
+## Reducer 需要时间 / UUID
+
+由 Middleware 工厂参数注入的 `now` / `uuid` 写入 Action，不要在 Reducer 里直接 `Date()`。
 
 ## 相对 TCA `@Dependency`
 
 | | 本方案 | TCA Dependency |
 |--|--------|----------------|
-| 解析时机 | 编译期（工厂参数） | 运行时键查找 |
-| 全局状态 | 无 | `DependencyValues` |
-| 测试 | 换工厂实参 | 改全局注册表 |
-| 聚合袋 | **不需要** | — |
+| 解析时机 | 工厂参数（+ 可选 Factory 在 Root） | 运行时键查找 |
+| 全局状态 | 可选（仅 Factory Container） | `DependencyValues` |
+| 测试 | 换工厂实参或 `Factory.register` | 改全局注册表 |
 
-**原则**：依赖在架构门口（**每个** Middleware 工厂）注入，不渗入 Reducer，不塞进 Store，也不先装进一个 `*Dependencies` 再二次分发。
+**原则**：无论有没有 Factory，依赖都停在架构门口；Reducer / Store 保持干净。
