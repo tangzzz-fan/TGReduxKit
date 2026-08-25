@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Architecture 5.0 (triangular)**: domain pure `Reducer` + `actor Store` + `Effect` system.
+  - Products: `TGReduxKitCore`, `TGReduxKitRuntime`, `TGReduxKitUI`, `TGReduxKitTesting`, umbrella `TGReduxKit`.
+  - `DependencyContext` injected into every reduce.
+  - `ObservableStore` (`@MainActor @Observable`) projects actor state for SwiftUI.
+  - Docs: `ADR_TRIANGULAR_ARCHITECTURE.md`, `MIGRATION_4_TO_5.md`, `EFFECT_GUIDE.md`, review union notes.
+
+### Changed
+- **Breaking**: `Reducer` is a nonisolated `struct` returning `Effect`; no longer `@MainActor` function typealias.
+- **Breaking**: Runtime `Store` is an `actor`; UI uses `ObservableStore`.
+- **Breaking**: Onion `Middleware` is no longer the primary async path; use `Effect` from reducers.
+- **Breaking**: `State` / `Action` must be `Sendable`.
+- Demo rewritten for Effect-based shopping flows (search debounce, feature flags).
+
+### Removed
+- 4.x Middleware pipeline, `ScopedStore`, Store-level `runTask`/`debounce`/`throttle`/`timeout` API surface, and in-tree time-travel UI (first 5.0 cut).
+
 ## [4.0.1] - 2026-08-25
 
 ### Changed

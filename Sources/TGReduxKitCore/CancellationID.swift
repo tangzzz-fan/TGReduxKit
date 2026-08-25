@@ -1,5 +1,6 @@
 import Foundation
 
+/// Lightweight identity for cancellable effects.
 public struct CancellationID: Hashable, Sendable, RawRepresentable, ExpressibleByStringLiteral {
     public let rawValue: String
 
