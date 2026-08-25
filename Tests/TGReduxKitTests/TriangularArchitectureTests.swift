@@ -6,16 +6,18 @@ import TGReduxKitTesting
 
 private struct CounterState: Equatable, Sendable, ReduxState {
     var count = 0
+    var label = ""
 }
 
 private enum CounterAction: Equatable, Sendable, ReduxAction {
     case increment
     case decrement
-    case delayedIncrement
     case set(Int)
+    case delayedIncrement
+    case streamSearch
 }
 
-private let counterReducer = Reducer<CounterState, CounterAction> { state, action, _ in
+private let counterReducer = Reducer<CounterState, CounterAction> { state, action in
     switch action {
     case .increment:
         state.count += 1
@@ -27,9 +29,15 @@ private let counterReducer = Reducer<CounterState, CounterAction> { state, actio
         state.count = value
         return .none
     case .delayedIncrement:
-        return .run(id: "delayed") {
+        return .run(id: "delayed", producing: {
             try await Task.sleep(for: .milliseconds(20))
             return .increment
+        })
+    case .streamSearch:
+        return .run(id: "search") { send in
+            await send(.set(-1)) // searching sentinel
+            try await Task.sleep(for: .milliseconds(10))
+            await send(.set(42))
         }
     }
 }
@@ -50,25 +58,23 @@ struct CoreReducerTests {
         let a = Reducer<CounterState, CounterAction>.sync { state, action in
             if case .increment = action { state.count += 1 }
         }
-        let b = Reducer<CounterState, CounterAction> { _, action, _ in
+        let b = Reducer<CounterState, CounterAction> { _, action in
             if case .increment = action {
-                return .run { .set(42) }
+                return .run(producing: { .set(42) })
             }
             return .none
         }
         let combined = combineReducers(a, b)
         var state = CounterState()
-        let effect = combined.reduce(&state, .increment, .immediate)
+        let effect = combined.reduce(&state, .increment)
         #expect(state.count == 1)
-        guard case .merge(let effects) = effect.operation else {
-            // single non-none effect may be returned unwrapped
-            if case .run = effect.operation {
-                return
-            }
-            Issue.record("Expected merge or run effect")
+        if case .merge = effect.operation {
             return
         }
-        #expect(effects.count >= 1)
+        if case .run = effect.operation {
+            return
+        }
+        Issue.record("Expected merge or run effect")
     }
 
     @Test
@@ -94,42 +100,55 @@ struct CoreReducerTests {
 }
 
 @Suite
+@MainActor
 struct RuntimeStoreTests {
     @Test
     func dispatchRunsEffectFollowUp() async {
-        let store = Store(initialState: CounterState(), reducer: counterReducer, dependencies: .immediate)
-        _ = await store.dispatch(.delayedIncrement)
-        try? await Task.sleep(for: .milliseconds(50))
-        let state = await store.currentState()
-        #expect(state.count == 1)
+        let store = Store(initialState: CounterState(), reducer: counterReducer)
+        await store.dispatchAndWait(.delayedIncrement)
+        #expect(store.state.count == 1)
     }
 
     @Test
     func cancelPreventsFollowUp() async {
         let store = Store(
             initialState: CounterState(),
-            reducer: Reducer<CounterState, CounterAction> { state, action, _ in
+            reducer: Reducer<CounterState, CounterAction> { state, action in
                 switch action {
                 case .delayedIncrement:
-                    return .run(id: "job") {
+                    return .run(id: "job", producing: {
                         try await Task.sleep(for: .milliseconds(40))
                         return .increment
-                    }
+                    })
                 case .decrement:
                     return .cancel(id: "job")
                 default:
                     if case .increment = action { state.count += 1 }
                     return .none
                 }
-            },
-            dependencies: .live
+            }
         )
 
-        _ = await store.dispatch(.delayedIncrement)
-        _ = await store.dispatch(.decrement)
+        _ = store.dispatch(.delayedIncrement)
+        _ = store.dispatch(.decrement)
         try? await Task.sleep(for: .milliseconds(80))
-        let state = await store.currentState()
-        #expect(state.count == 0)
+        #expect(store.state.count == 0)
+    }
+
+    @Test
+    func multiValueEffectCanSendMultipleActions() async {
+        let store = Store(initialState: CounterState(), reducer: counterReducer)
+        await store.dispatchAndWait(.streamSearch)
+        #expect(store.state.count == 42)
+    }
+
+    @Test
+    func dispatchReturnsCancellableTask() async {
+        let store = Store(initialState: CounterState(), reducer: counterReducer)
+        let task = store.dispatch(.delayedIncrement)
+        task?.cancel()
+        await task?.value
+        #expect(store.state.count == 0)
     }
 }
 
@@ -138,17 +157,22 @@ struct EffectOperatorTests {
     @Test
     func debounceDelaysWork() async throws {
         let started = Date()
-        let effect = Effect<CounterAction>.run {
+        let effect = Effect<CounterAction>.run(producing: {
             .increment
-        }
+        })
         .debounce(for: .milliseconds(30))
 
         guard case .run(_, let work) = effect.operation else {
             Issue.record("Expected run")
             return
         }
-        let action = try await work()
-        #expect(action == .increment)
+        final class Box: @unchecked Sendable {
+            var sent: CounterAction?
+        }
+        let box = Box()
+        let send = Send<CounterAction> { action in box.sent = action }
+        try await work(send)
+        #expect(box.sent == .increment)
         #expect(Date().timeIntervalSince(started) >= 0.025)
     }
 }
@@ -170,23 +194,5 @@ struct DependencyKeyTests {
         var context = DependencyContext.live
         context[AnswerKey.self] = 7
         #expect(context[AnswerKey.self] == 7)
-    }
-
-    @Test
-    func withDependenciesUpdatesStore() async {
-        let store = Store(
-            initialState: CounterState(),
-            reducer: Reducer<CounterState, CounterAction> { state, action, context in
-                if case .set = action {
-                    state.count = context[AnswerKey.self]
-                }
-                return .none
-            },
-            dependencies: .immediate
-        )
-        await store.withDependencies { $0[AnswerKey.self] = 99 }
-        _ = await store.dispatch(.set(0))
-        let state = await store.currentState()
-        #expect(state.count == 99)
     }
 }

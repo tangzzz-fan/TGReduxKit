@@ -1,12 +1,12 @@
 import Foundation
 
-/// Declares a typed dependency available through `DependencyContext`.
+/// Optional typed dependency bag for **app-level** wiring.
+/// Not injected into `Reducer` — prefer capturing `@Sendable` closures in the reducer factory.
 public protocol DependencyKey: Sendable {
     associatedtype Value: Sendable
     static var liveValue: Value { get }
 }
 
-/// Injectable dependencies available to every reduce invocation.
 public struct DependencyContext: Sendable {
     public var uuid: @Sendable () -> UUID
     public var date: @Sendable () -> Date
@@ -33,7 +33,6 @@ public struct DependencyContext: Sendable {
         sleep: { _ in }
     )
 
-    /// Typed app/framework dependencies. Unset keys resolve to `Key.liveValue`.
     public subscript<Key: DependencyKey>(_ key: Key.Type) -> Key.Value {
         get {
             if let value = values[ObjectIdentifier(key)] as? Key.Value {

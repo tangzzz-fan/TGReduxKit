@@ -3,17 +3,12 @@ import TGReduxKit
 import TGNavigationStack
 import Shopping
 
-/// Demo shell: one `ObservableStore`; services live on `DependencyContext`.
+/// Demo shell: `@MainActor @Observable` `Store` is the SwiftUI root.
 public struct ShoppingAppView: View {
-    @State private var store: ObservableStore<ShoppingState, ShoppingAction>
+    @State private var store: Store<ShoppingState, ShoppingAction>
 
-    public init() {
-        _store = State(
-            initialValue: ObservableStore(
-                initialState: ShoppingState(),
-                reducer: shoppingReducer
-            )
-        )
+    public init(reducer: Reducer<ShoppingState, ShoppingAction> = shoppingReducer) {
+        _store = State(initialValue: Store(initialState: ShoppingState(), reducer: reducer))
     }
 
     public var body: some View {

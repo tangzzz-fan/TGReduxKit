@@ -4,51 +4,63 @@ import TGNavigationStack
 
 // MARK: - Root composition
 
-/// Shopping root reducer. Services are read from `DependencyContext` (see `Dependencies.swift`).
-public let shoppingReducer = combineReducers(
-    pullback(
-        catalogReducer,
-        state: \.catalog,
-        action: ShoppingAction.catalog,
-        extract: { if case .catalog(let a) = $0 { a } else { nil } }
-    ),
-    pullback(
-        cartReducer,
-        state: \.cart,
-        action: ShoppingAction.cart,
-        extract: { if case .cart(let a) = $0 { a } else { nil } }
-    ),
-    pullback(
-        featureFlagsReducer,
-        state: \.featureFlags,
-        action: ShoppingAction.featureFlags,
-        extract: { if case .featureFlags(let a) = $0 { a } else { nil } }
-    ),
-    crossCuttingReducer
-)
+/// Builds the shopping reducer. Capture services in the factory (no `DependencyContext` injection).
+public func makeShoppingReducer(
+    searchProducts: @escaping @Sendable (String, [Product]) async -> [Product] = ShoppingServices.searchProducts,
+    fetchFeatureFlags: @escaping @Sendable () async -> FeatureFlagSnapshot = ShoppingServices.fetchFeatureFlags,
+    now: @escaping @Sendable () -> Date = { Date() }
+) -> Reducer<ShoppingState, ShoppingAction> {
+    combineReducers(
+        pullback(
+            catalogReducer(searchProducts: searchProducts),
+            state: \.catalog,
+            action: ShoppingAction.catalog,
+            extract: { if case .catalog(let a) = $0 { a } else { nil } }
+        ),
+        pullback(
+            cartReducer,
+            state: \.cart,
+            action: ShoppingAction.cart,
+            extract: { if case .cart(let a) = $0 { a } else { nil } }
+        ),
+        pullback(
+            featureFlagsReducer(fetchFeatureFlags: fetchFeatureFlags, now: now),
+            state: \.featureFlags,
+            action: ShoppingAction.featureFlags,
+            extract: { if case .featureFlags(let a) = $0 { a } else { nil } }
+        ),
+        crossCuttingReducer
+    )
+}
+
+public let shoppingReducer = makeShoppingReducer()
 
 // MARK: - Feature reducers
 
-private let catalogReducer = Reducer<CatalogState, CatalogAction> { state, action, context in
-    switch action {
-    case .searchQueryChanged(let query):
-        state.searchQuery = query
-        state.isSearching = !query.isEmpty
-        if query.isEmpty {
+private func catalogReducer(
+    searchProducts: @escaping @Sendable (String, [Product]) async -> [Product]
+) -> Reducer<CatalogState, CatalogAction> {
+    Reducer { state, action in
+        switch action {
+        case .searchQueryChanged(let query):
+            state.searchQuery = query
+            state.isSearching = !query.isEmpty
+            if query.isEmpty {
+                state.isSearching = false
+                return .none
+            }
+            return ShoppingEffects.searchCatalog(
+                query: query,
+                in: state.allProducts,
+                search: searchProducts
+            )
+
+        case .searchCompleted(let query, let products):
+            guard query == state.searchQuery else { return .none }
             state.isSearching = false
+            state.visibleProducts = products
             return .none
         }
-        return ShoppingEffects.searchCatalog(
-            query: query,
-            in: state.allProducts,
-            search: context.searchProducts
-        )
-
-    case .searchCompleted(let query, let products):
-        guard query == state.searchQuery else { return .none }
-        state.isSearching = false
-        state.visibleProducts = products
-        return .none
     }
 }
 
@@ -67,27 +79,32 @@ private let cartReducer = Reducer<CartState, CartAction>.sync { state, action in
     }
 }
 
-private let featureFlagsReducer = Reducer<FeatureFlagsState, FeatureFlagsAction> { state, action, context in
-    switch action {
-    case .loadRequested(let source):
-        state.isLoading = true
-        state.lastSource = source
-        return ShoppingEffects.loadFeatureFlags(
-            fetch: context.fetchFeatureFlags,
-            now: context.date
-        )
+private func featureFlagsReducer(
+    fetchFeatureFlags: @escaping @Sendable () async -> FeatureFlagSnapshot,
+    now: @escaping @Sendable () -> Date
+) -> Reducer<FeatureFlagsState, FeatureFlagsAction> {
+    Reducer { state, action in
+        switch action {
+        case .loadRequested(let source):
+            state.isLoading = true
+            state.lastSource = source
+            return ShoppingEffects.loadFeatureFlags(
+                fetch: fetchFeatureFlags,
+                now: now
+            )
 
-    case .loaded(let snapshot, let lastUpdated):
-        state.snapshot = snapshot
-        state.isLoading = false
-        state.lastUpdated = lastUpdated
-        return .none
+        case .loaded(let snapshot, let lastUpdated):
+            state.snapshot = snapshot
+            state.isLoading = false
+            state.lastUpdated = lastUpdated
+            return .none
+        }
     }
 }
 
 // MARK: - Cross-cutting (sync + navigation)
 
-private let crossCuttingReducer = Reducer<ShoppingState, ShoppingAction> { state, action, _ in
+private let crossCuttingReducer = Reducer<ShoppingState, ShoppingAction> { state, action in
     switch action {
     case .catalog(.searchCompleted(_, let products)):
         state.catalog.visibleProducts = applyFeatureFlags(

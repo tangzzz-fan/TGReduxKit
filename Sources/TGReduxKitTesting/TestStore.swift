@@ -8,22 +8,19 @@ public final class TestStore<State: Equatable & Sendable, Action: Sendable>: @un
     public private(set) var recordedEffects: [Effect<Action>] = []
 
     private let reducer: Reducer<State, Action>
-    private var dependencies: DependencyContext
 
     public init(
         initialState: State,
-        reducer: Reducer<State, Action>,
-        dependencies: DependencyContext = .immediate
+        reducer: Reducer<State, Action>
     ) {
         self.state = initialState
         self.reducer = reducer
-        self.dependencies = dependencies
     }
 
     /// Applies the reducer synchronously and records the returned effect without running it.
     @discardableResult
     public func send(_ action: Action) -> Effect<Action> {
-        let effect = reducer.reduce(&state, action, dependencies)
+        let effect = reducer.reduce(&state, action)
         recordedEffects.append(effect)
         return effect
     }
@@ -58,24 +55,21 @@ public final class TestStore<State: Equatable & Sendable, Action: Sendable>: @un
         }
     }
 
-    /// Runs recorded effects against a live actor store starting from the current state.
+    /// Runs recorded effects on a live `@MainActor` store, then syncs state back.
+    @MainActor
     public func runEffects() async -> State {
-        let store = Store(initialState: state, reducer: reducer, dependencies: dependencies)
+        let store = Store(initialState: state, reducer: reducer)
         let pending = recordedEffects
         recordedEffects.removeAll()
         for effect in pending {
-            // Drive by re-dispatching through a no-op action path is awkward;
-            // instead temporarily expose run via dispatch of a synthetic path:
-            // We apply effects by injecting them through Store's private API — use a helper reducer.
-            _ = store
             await runEffect(effect, on: store)
         }
-        return await store.currentState()
+        state = store.state
+        return state
     }
 
+    @MainActor
     private func runEffect(_ effect: Effect<Action>, on store: Store<State, Action>) async {
-        // Replay by wrapping: dispatch is the only public entry; use Effect.run merge via reducer bypass.
-        // Install a one-shot by calling store with a pass-through: we duplicate Runtime scheduling lightly.
         switch effect.operation {
         case .none:
             return
@@ -86,10 +80,13 @@ public final class TestStore<State: Equatable & Sendable, Action: Sendable>: @un
                 await runEffect(child, on: store)
             }
         case .run(_, let work):
-            do {
-                if let action = try await work() {
-                    _ = await store.dispatch(action)
+            let send = Send<Action> { action in
+                await MainActor.run {
+                    _ = store.dispatch(action)
                 }
+            }
+            do {
+                try await work(send)
             } catch {
                 return
             }

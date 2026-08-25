@@ -1,86 +1,85 @@
 import Foundation
+import Observation
 import TGReduxKitCore
 
-/// Actor-isolated state container. Owns mutation and Effect scheduling.
-public actor Store<State: Sendable, Action: Sendable> {
+/// Main-actor observable state container. Owns effect scheduling and cancellation.
+@MainActor
+@Observable
+public final class Store<State: Sendable, Action: Sendable> {
     public private(set) var state: State
 
+    @ObservationIgnored
     private let reducer: Reducer<State, Action>
-    private var dependencies: DependencyContext
+
+    @ObservationIgnored
     private var managedTasks: [CancellationID: Task<Void, Never>] = [:]
-    private var stateHandler: (@Sendable (State) async -> Void)?
 
     public init(
         initialState: State,
-        reducer: Reducer<State, Action>,
-        dependencies: DependencyContext = .live
+        reducer: Reducer<State, Action>
     ) {
         self.state = initialState
         self.reducer = reducer
-        self.dependencies = dependencies
     }
 
-    /// Registers an async observer invoked after each successful reduce (before/with effects).
-    public func setStateHandler(_ handler: (@Sendable (State) async -> Void)?) {
-        self.stateHandler = handler
-    }
-
-    public func withDependencies(
-        _ update: @Sendable (inout DependencyContext) -> Void
-    ) {
-        update(&dependencies)
-    }
-
-    /// Synchronously reduces `action`, notifies observers, then runs the returned effect.
+    /// Fire-and-forget friendly. Returns a `Task` handle so callers may cancel; discard freely.
     @discardableResult
-    public func dispatch(_ action: Action) async -> State {
-        let effect = reducer.reduce(&state, action, dependencies)
-        let snapshot = state
-        if let stateHandler {
-            await stateHandler(snapshot)
+    public func dispatch(_ action: Action) -> Task<Void, Never>? {
+        let effect = reducer.reduce(&state, action)
+        return run(effect)
+    }
+
+    /// Awaits completion of the scheduled effect tree for this dispatch (not nested follow-ups' full trees beyond returned tasks).
+    public func dispatchAndWait(_ action: Action) async {
+        if let task = dispatch(action) {
+            await task.value
         }
-        await run(effect)
-        return snapshot
     }
 
-    public func currentState() -> State {
-        state
-    }
-
-    private func run(_ effect: Effect<Action>) async {
+    private func run(_ effect: Effect<Action>) -> Task<Void, Never>? {
         switch effect.operation {
         case .none:
-            return
+            return nil
 
         case .cancel(let id):
-            cancelTask(id: id)
+            managedTasks[id]?.cancel()
+            managedTasks[id] = nil
+            return nil
 
         case .merge(let effects):
-            await withTaskGroup(of: Void.self) { group in
-                for child in effects {
-                    group.addTask { await self.run(child) }
+            let children = effects.compactMap { run($0) }
+            guard !children.isEmpty else { return nil }
+            return Task {
+                for child in children {
+                    await child.value
                 }
             }
 
         case .run(let id, let work):
+            let previous: Task<Void, Never>?
             if let id {
-                cancelTask(id: id)
+                previous = managedTasks[id]
+                previous?.cancel()
+            } else {
+                previous = nil
             }
 
-            let previous = id.flatMap { managedTasks[$0] }
             let task = Task { [weak self] in
                 if let previous {
                     await previous.value
                 }
                 guard !Task.isCancelled else { return }
+                guard let self else { return }
+
+                let send = Send<Action> { action in
+                    await self.perform(action)
+                }
+
                 do {
-                    guard let action = try await work() else { return }
-                    guard !Task.isCancelled else { return }
-                    await self?.dispatch(action)
+                    try await work(send)
                 } catch is CancellationError {
                     return
                 } catch {
-                    // Swallow non-cancellation errors; domain should map failures into Action.
                     return
                 }
             }
@@ -89,15 +88,19 @@ public actor Store<State: Sendable, Action: Sendable> {
                 managedTasks[id] = task
                 Task { [weak self] in
                     await task.value
-                    await self?.finishTask(id: id, task: task)
+                    self?.finishTask(id: id, task: task)
                 }
             }
+
+            return task
         }
     }
 
-    private func cancelTask(id: CancellationID) {
-        managedTasks[id]?.cancel()
-        managedTasks[id] = nil
+    private func perform(_ action: Action) async {
+        let effect = reducer.reduce(&state, action)
+        if let task = run(effect) {
+            await task.value
+        }
     }
 
     private func finishTask(id: CancellationID, task: Task<Void, Never>) {
