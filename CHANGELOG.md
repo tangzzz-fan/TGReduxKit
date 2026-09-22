@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.2] - 2026-09-22
+
 ### Added
 - **Docs / DI**: `DEPENDENCY_INJECTION.md` 新增「⚠️ 可注册域 ⊆ `Sendable`」一节 —— Factory 注册闭包为 `@Sendable`，
   注册 `@MainActor` 隔离类型会编译失败；附 Swift 6.4 / Factory 2.5.3 实测矩阵，并指出**唯一有效修法是注解闭包**
@@ -28,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   （`projectFormat: xcode16_0` + `type: syncedFolder`，保留 Xcode 16 目录同步语义）。
   `SWIFT_VERSION` 由「pbxproj 里 6 处」收敛为 `project.yml` 一处声明。
   迁移已逐项比对有效构建设置：三个 target × Debug/Release **零丢失、零改值**。
+  ⚠️ **`project.pbxproj` 本次未替换**，仍是手写文件（`objectVersion` 77 未变）；
+  `project.yml` 目前是**并列的**声明式规格，尚未成为工程文件的来源。
+  生成物仅在镜像目录比对过结构与有效设置，未过真实构建
+  （`TGNavigationStack` 不在本机，Xcode 无法解析包图），待其可用后再切换。
   `regenerate.sh` 处理两个坑：本机 `USER` 未设置会导致 XcodeGen 静默 exit 2；
   XcodeGen 不产出 `Package.resolved`，需备份还原。
 
@@ -43,7 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Demo / Concurrency**: App target `SWIFT_VERSION` 5.0 → **6.0**，与 `Shopping` / `TGReduxKit` 两个 SPM 包对齐。
 - **Demo / Concurrency**: 测试 target（`TGReduxKitDemoTests` / `TGReduxKitDemoUITests`）`SWIFT_VERSION`
   同步 5.0 → **6.0**。`project.pbxproj` 内 6 处配置全部为 `6.0`，无残留 `5.0`。
-  沙盒实测 `swift build --build-tests` 零 error / 零 warning；`TGReduxKitDemoTests` 2 个用例通过。
+  沙盒实测 `swift build --build-tests`：**本工程代码**（Demo / Shopping / TGReduxKit）零 error / 零 warning
+  —— 构建日志中的告警全部来自依赖 Factory 2.5.3 自身的 `#ConversionFromIsolatedAnyToSynchronous`；
+  测试 `TGReduxKitDemoTests` 5 个用例（2 个原有 + 3 个新增）全部通过。
   （`TGReduxKitDemoUITests` 在沙盒内只能验证**编译**：XCUITest 需要真实 App bundle，
   无宿主时统一报 `No target application path specified`，属沙盒限制而非代码问题。）
   之所以零成本，是因为所有被注册 / 捕获的依赖都是 `Sendable`。
