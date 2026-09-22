@@ -4,7 +4,7 @@
 
 **纯 Reducer（`Void`）+ Middleware → `Effect` + `@MainActor @Observable` `Store`**
 
-领域 `State` / `Action` / `Reducer` 保持非隔离纯函数；副作用与依赖只在 Middleware 边界注入（无 DI 容器）。
+领域 `State` / `Action` / `Reducer` 保持非隔离纯函数；副作用与依赖只在 Middleware 边界注入 —— **不内置 DI 容器，领域层不感知 DI 框架**。
 
 ## 架构
 

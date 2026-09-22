@@ -66,6 +66,12 @@
 
 每个 Middleware **工厂参数**注入（Demo：`makeCatalogSearchMiddleware(productSearch:)`）。见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md)。**不要**用 `*Dependencies` 袋二次分发。
 
+两条补充约束：
+
+- **`now` / `uuid` 不给默认值。** 默认参数是隐式依赖 —— 省略仍能编译，`Date()` 会悄悄进入业务路径。
+- **可注册依赖 ⊆ `Sendable`。** 若对接 DI 容器，容器注册闭包是 `@Sendable`，注册 `@MainActor` 隔离类型会编译失败。
+  详见 [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md) 的实测矩阵。
+
 ### 4.6 SwiftUI
 
 `@Observable` Store、`provideStore`、`binding(get:send:)`。协议名 `State` 与 SwiftUI 冲突时用 `@SwiftUI.State`。

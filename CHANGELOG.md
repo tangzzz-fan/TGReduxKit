@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Docs / DI**: `DEPENDENCY_INJECTION.md` 新增「⚠️ 可注册域 ⊆ `Sendable`」一节 —— Factory 注册闭包为 `@Sendable`，
+  注册 `@MainActor` 隔离类型会编译失败；附 Swift 6.4 / Factory 2.5.3 实测矩阵，并指出**唯一有效修法是注解闭包**
+  （`self { @MainActor in … }`，属性注解既不必要也不充分）。
+- **Docs / Concurrency**: `DEFAULT_ACTOR_ISOLATION_AND_REDUX.md` 补充「默认 MainActor 的 target 内定义的类型
+  无法直接注册进 DI 容器」，与 DI 文档互引。
+- **Docs / DI**: `DEPENDENCY_INJECTION.md` 新增「**结论：要不要和 Factory 组合使用**」一节 ——
+  给出决策规则、纠正「Factory 与 Store 生命周期打架」这一误诊（真实摩擦是
+  `@Sendable` 注册约束 + 编译期可见性退化），并明确铁律：Factory 不得跨过 Redux 边界。
+- **Docs / DI**: `DEPENDENCY_INJECTION.md` 新增「**Store 的构建时机**」一节 ——
+  解释为何不能在 `init` 里 `State(initialValue: makeStore(...))`，附实测对照表。
+- **Tests / Demo**: 新增 `StoreConstructionTimingTests`（3 个用例）钉住「Store 只在视图首次出现时构建一次」。
+  这条约束**编译期表达不了、运行期又无副作用可观测**，只能靠计数器守住；
+  为此在 `ShoppingStoreBootstrap` 加了一个 `#if DEBUG` 探针 `makeStoreCallCount`。
+  含一条**对照组**（`makeStoreAdvancesCounter`）防止探针失效导致假阳性。
+- **Demo / Build**: 新增 `project.yml` + `regenerate.sh`，Demo 的 Xcode 工程可由 XcodeGen 声明式生成
+  （`projectFormat: xcode16_0` + `type: syncedFolder`，保留 Xcode 16 目录同步语义）。
+  `SWIFT_VERSION` 由「pbxproj 里 6 处」收敛为 `project.yml` 一处声明。
+  迁移已逐项比对有效构建设置：三个 target × Debug/Release **零丢失、零改值**。
+  `regenerate.sh` 处理两个坑：本机 `USER` 未设置会导致 XcodeGen 静默 exit 2；
+  XcodeGen 不产出 `Package.resolved`，需备份还原。
+
+### Changed
+- **Demo / DI**: 两条 Composition Root 收敛为「**一个 App 视图 + 一个接线点**」。
+  `ManualDIShoppingAppView` 与 `FactoryDIShoppingAppView` 合并为 `ShoppingAppView`（只接受已组装好的服务）；
+  `DemoRootView` 成为**全工程唯一接触 `Container.shared` 的地方**，两种接线产出同一个视图。
+  容器解析不再渗透到 View / Store / Middleware。
+- **Demo / DI**: `ShoppingStoreBootstrap.makeStore(..., now:)` 与 `makeFeatureFlagsMiddleware(featureFlags:now:)`
+  移除 `now` 的默认值 `= { Date() }`。默认参数是**隐式依赖** —— 省略仍能编译并运行，`Date()` 会悄悄进入业务路径。
+- **Demo / Preview**: 移除 `Container.shared.…register { … }` 的预览覆盖写法（`register` 是永久替换，
+  会污染同进程内的其它 Preview / 测试），改为**直接换实参**。
+- **Demo / Concurrency**: App target `SWIFT_VERSION` 5.0 → **6.0**，与 `Shopping` / `TGReduxKit` 两个 SPM 包对齐。
+- **Demo / Concurrency**: 测试 target（`TGReduxKitDemoTests` / `TGReduxKitDemoUITests`）`SWIFT_VERSION`
+  同步 5.0 → **6.0**。`project.pbxproj` 内 6 处配置全部为 `6.0`，无残留 `5.0`。
+  沙盒实测 `swift build --build-tests` 零 error / 零 warning；`TGReduxKitDemoTests` 2 个用例通过。
+  （`TGReduxKitDemoUITests` 在沙盒内只能验证**编译**：XCUITest 需要真实 App bundle，
+  无宿主时统一报 `No target application path specified`，属沙盒限制而非代码问题。）
+  之所以零成本，是因为所有被注册 / 捕获的依赖都是 `Sendable`。
+
+### Fixed
+- **Demo / SwiftUI**: `ShoppingAppView` 不再在 `init` 里 `State(initialValue: makeStore(...))`。
+  `View` 是值类型，父视图每次重绘都会重跑 `init`，而 `State` 只保留第一次写入 ——
+  旧写法会随重绘次数线性地白构建 `Store` 并静默丢弃（实测 5 次重绘 → 6 次构建）。
+  改为 `@State` 持有 optional + `.onAppear` 内 `guard store == nil` 构建一次（实测 5 次重绘 → 1 次构建）。
+- **Docs**: `README.md` 与 `ADR_AUDITED_MIDDLEWARE_EFFECT.md` 的「无 DI 容器」表述与 Demo 已引入 FactoryKit 相矛盾，
+  改为「不内置 DI 容器；领域层不感知 DI 框架」。
+
+### Removed
+- **Demo**: `FactoryDIShoppingAppView.swift`（并入 `ShoppingAppView`）。
+
 ## [5.0.1] - 2026-08-25
 
 ### Added

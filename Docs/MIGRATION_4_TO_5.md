@@ -84,8 +84,16 @@ Qualify `@SwiftUI.State` when the `State` protocol is in scope.
 | Inject at Composition Root into middleware factories | Put `APIClient` on `Store` |
 | Capture `Sendable` services in Effect closures | Use a global `DependencyValues` registry |
 | Pass mocks into factories in tests / Previews | Call live networking from the reducer |
+| Pass `now` / `uuid` explicitly | Rely on a default argument for a dependency |
 
 Demo reference: Composition Root calls `makeCatalogSearchMiddleware(productSearch:)` / `makeFeatureFlagsMiddleware(featureFlags:now:)` directly — no `*Dependencies` bag.
+
+`now` / `uuid` deliberately have **no default value**: a default argument is an implicit dependency —
+you can omit it, the code still compiles, and `Date()` silently enters the business path.
+
+If you use a DI container (e.g. Factory), resolve **only at the Composition Root** and pass the results in.
+Note that a container's registration closure is `@Sendable`, so only `Sendable` services can be registered —
+see [DEPENDENCY_INJECTION.md](./DEPENDENCY_INJECTION.md).
 
 ## Domain isolation
 

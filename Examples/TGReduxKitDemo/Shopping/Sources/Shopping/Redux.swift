@@ -199,9 +199,11 @@ public func makeCatalogSearchMiddleware(
     }
 }
 
+/// `now` 无默认值：默认参数是一种隐式依赖 —— 省略它仍能编译并运行，
+/// `Date()` 会悄悄进入业务路径。要求显式传入，成本为零。
 public func makeFeatureFlagsMiddleware(
     featureFlags: any FeatureFlagFetching,
-    now: @escaping @Sendable () -> Date = { Date() }
+    now: @escaping @Sendable () -> Date
 ) -> Middleware<ShoppingState, ShoppingAction> {
     { store, action, next in
         let base = next(action)

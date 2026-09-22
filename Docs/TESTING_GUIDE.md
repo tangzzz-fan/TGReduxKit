@@ -36,18 +36,39 @@ struct MockSearch: ProductSearching {
     }
 }
 
+let fixedNow = Date(timeIntervalSince1970: 0)
+
 let store = Store(
     initialState: ShoppingState(),
     reducer: shoppingReducer,
     middlewares: [
         makeCatalogSearchMiddleware(productSearch: MockSearch()),
-        makeFeatureFlagsMiddleware(featureFlags: LiveFeatureFlagService()),
+        makeFeatureFlagsMiddleware(
+            featureFlags: LiveFeatureFlagService(),
+            now: { fixedNow }          // 注入固定时间 → 断言可复现
+        ),
         makeAsyncLabMiddleware()
     ]
 )
 store.dispatch(.catalog(.searchQueryChanged("pad")))
 // 短暂等待 Effect 完成后再断言 state
 ```
+
+> `now` / `uuid` **没有默认值**。这是刻意的：默认参数是隐式依赖，省略仍能编译，
+> `Date()` 会悄悄进入业务路径，测试也就失去可复现性。
+
+## 用 DI 容器时的隔离
+
+若被测代码走 Factory，**优先换实参**而不是改容器。确实需要改容器时，用 `@TaskLocal` 隔离：
+
+```swift
+Container.$shared.withValue(Container()) {
+    Container.shared.featureFlags.register { MockFeatureFlagService() }
+    // 断言都在这个作用域内；退出后容器恢复
+}
+```
+
+裸 `register` 是**永久替换**，并行测试之间会互相污染。
 
 ## 第三层：Effect 结构抽检（~5%）
 
