@@ -1,0 +1,156 @@
+# XcodeGen spec — TGReduxKitDemo
+#
+# 生成方式：
+#     cd Examples/TGReduxKitDemo
+#     USER=$(id -un) xcodegen generate
+#
+# ⚠️ `USER=$(id -un)` 不能省。本机 shell 环境里 `USER` 未设置（`whoami` 正常但 `USER` 为空），
+#    XcodeGen 读 `USER` 取不到就打印 "Couldn't find current username" 并 exit 2，不生成任何东西。
+#
+# 为什么用 XcodeGen 而不是手改 pbxproj：
+#   - `SWIFT_VERSION` / `SWIFT_DEFAULT_ACTOR_ISOLATION` 等从「6 处 find-replace」变成一处声明
+#   - 测试 target 的挂载、SPM 依赖、syncedFolder 都变成可 diff 的声明式配置
+#   - `objectVersion 77` + `type: syncedFolder` 保留了 Xcode 16 的目录同步语义
+#     （新增 .swift 文件不需要重新生成工程）
+
+name: TGReduxKitDemo
+
+options:
+  # objectVersion 77 = Xcode 16 工程格式，PBXFileSystemSynchronizedRootGroup 的前提
+  projectFormat: xcode16_0
+  deploymentTarget:
+    iOS: "26.2"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+packages:
+  # 仓库根（TGReduxKit 本体）
+  TGReduxKit:
+    path: ../../../TGReduxKit
+  # ⚠️ 本机不存在此仓库，Demo 因此无法构建/解析包图。
+  #    见 Docs/DEFAULT_ACTOR_ISOLATION_AND_REDUX.md 与 .workbuddy-ai/verify-sandbox/
+  TGNavigationStack:
+    path: ../../../TGNavigationStack
+  Shopping:
+    path: Shopping
+  Factory:
+    url: https://github.com/hmlongco/Factory
+    from: "2.5.0"
+
+settings:
+  base:
+    # ---- 覆盖 XcodeGen preset 与本工程基线不一致的值 ----
+    # preset 默认是 gnu++14 / gnu11 / 5.0，本工程是 gnu++20 / gnu17 / 6.0
+    CLANG_CXX_LANGUAGE_STANDARD: "gnu++20"
+    GCC_C_LANGUAGE_STANDARD: "gnu17"
+
+    # ★ 一处声明，三个 target 全部继承（这正是本次迁移的主要收益）
+    SWIFT_VERSION: "6.0"
+
+    # ---- 基线里存在、但 preset 未覆盖的项目级设置 ----
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: "YES"
+    DEVELOPMENT_TEAM: "UKXWZ3FS84"
+    ENABLE_USER_SCRIPT_SANDBOXING: "YES"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: "YES"
+    STRING_CATALOG_GENERATE_SYMBOLS: "YES"
+
+  configs:
+    Debug:
+      # preset 只给 "DEBUG"；基线是 "DEBUG $(inherited)"，保留 $(inherited) 以兼容上层注入
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG $(inherited)"
+      GCC_PREPROCESSOR_DEFINITIONS: ["DEBUG=1", "$(inherited)"]
+    Release:
+      # XcodeGen 的 Release preset 不含此项，但 Xcode 新建工程的 Release 模板有。
+      # 显式补回，避免相对基线静默降低产物校验强度。
+      VALIDATE_PRODUCT: "YES"
+
+targets:
+  # ============================================================
+  TGReduxKitDemo:
+    type: application
+    platform: iOS
+    sources:
+      - path: TGReduxKitDemo
+        type: syncedFolder
+    dependencies:
+      - package: TGReduxKit
+        product: TGReduxKit
+      - package: TGNavigationStack
+        product: TGNavigationStack
+      - package: Shopping
+        product: Shopping
+      - package: Factory
+        product: FactoryKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.tango.TGReduxKitDemo"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "AccentColor"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        CODE_SIGN_STYLE: "Automatic"
+        GENERATE_INFOPLIST_FILE: "YES"
+        ENABLE_PREVIEWS: "YES"
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+        # ★ 仅 App target：默认 MainActor 隔离。
+        #   测试 target 刻意不设 —— 见 Docs/DEFAULT_ACTOR_ISOLATION_AND_REDUX.md
+        SWIFT_DEFAULT_ACTOR_ISOLATION: "MainActor"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+        SWIFT_EMIT_LOC_STRINGS: "YES"
+        SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: "YES"
+
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+
+  # ============================================================
+  TGReduxKitDemoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: TGReduxKitDemoTests
+        type: syncedFolder
+    dependencies:
+      - target: TGReduxKitDemo
+      - package: Shopping
+        product: Shopping
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.tango.TGReduxKitDemoTests"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        CODE_SIGN_STYLE: "Automatic"
+        GENERATE_INFOPLIST_FILE: "YES"
+        STRING_CATALOG_GENERATE_SYMBOLS: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+        SWIFT_EMIT_LOC_STRINGS: "NO"
+        SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/TGReduxKitDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TGReduxKitDemo"
+
+  # ============================================================
+  TGReduxKitDemoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: TGReduxKitDemoUITests
+        type: syncedFolder
+    dependencies:
+      - target: TGReduxKitDemo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.tango.TGReduxKitDemoUITests"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        CODE_SIGN_STYLE: "Automatic"
+        GENERATE_INFOPLIST_FILE: "YES"
+        STRING_CATALOG_GENERATE_SYMBOLS: "NO"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_APPROACHABLE_CONCURRENCY: "YES"
+        SWIFT_EMIT_LOC_STRINGS: "NO"
+        SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: "YES"
+        TEST_TARGET_NAME: "TGReduxKitDemo"
